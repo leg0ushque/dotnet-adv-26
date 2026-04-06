@@ -2,7 +2,7 @@
 
 1. **What are the cons and pros of the Monolith architectural style?**
 
-The main advantage is having everything in one place
+The main advantage is having everything in one place  
 ➕ Understanding is simple during onboarding.  
 ➕ Development is simple because the code is located in one place with no dependencies.  
 ➕ Debugging is simple, the flow of specific request is easy tracked within the application.  
@@ -10,7 +10,7 @@ The main advantage is having everything in one place
 ➕ Deployment of a single monolithic unit is also simple, horizontal scaling (multiple instances with load balancer) is supported.  
 ➕ Good for early stages of application development - when the requirements are not finalized and its not clear what architecture to choose in the future.  
 
-At the same time the "all in one" approach has its disadvantages, especially with codebase growing:
+At the same time the "all in one" approach has its disadvantages, especially with codebase growing:  
 ➖ High code coupling. A big application has tons of code to review & maintain - may lead to spaghetti with difficulties in understanding.  
 ➖ Its' difficult to split the solution between development teams - code ownership approach cannot be used.  
 ➖ Low flexibility of technologies. Usage of same version of libraries is usually required for all the monolith items, so the more code (components) is inside - the more time it will take to migrate.  
@@ -21,7 +21,7 @@ At the same time the "all in one" approach has its disadvantages, especially wit
 
 2. What are the cons and pros of the Microservices architectural style?
 
-The main idea of the style is splitting into a set of smaller services (monolithic applications) with ability of interactions between each other if needed.
+The main idea of the style is splitting into a set of smaller services (monolithic applications) with ability of interactions between each other if needed.  
 
 3. What is the difference between SOA and Microservices?
 
