@@ -1,6 +1,6 @@
 # 03. Architectural Styles and Patterns
 
-##### 1. What are the cons and pros of the Monolith architectural style?
+### 1. What are the cons and pros of the Monolith architectural style?
 
 The main advantage is having everything in one place  
 ➕ Understanding is simple during onboarding.  
@@ -19,7 +19,7 @@ At the same time the "all in one" approach has its disadvantages, especially wit
 ➖ Any change leads to re-deploy of the whole monolith. If the build/deployment pipeline fails for some reason, another run of pipeline will take extra time.  
 ➖ Performance issues. When the application is scaled horizontally, but the database will probably remain one and same for all the services. Of course query optimization and replication may be done, but these ways of optimization are pretty limited.  
 
-##### 2. What are the cons and pros of the Microservices architectural style? 
+### 2. What are the cons and pros of the Microservices architectural style? 
 
 The main idea of the style is splitting into a set of smaller services (monolithic applications) with ability of interactions between each other if needed. So  
 ➕ High code decoupling achieved, because there are clear responsibilities and bounds between services, what makes them better to understand, review & maintain.  
@@ -39,7 +39,7 @@ But with the number of services growing several problems appear:
 ➖ A single API Gateway is recommended.  
 ➖ It takes some time to extract services from monolith and split the responsibilities. May be much harder if monolith was not properly organized.  
 
-##### 3. What is the difference between SOA and Microservices?
+### 3. What is the difference between SOA and Microservices?
 
 Both rely on the services as the main component but have differences in several aspects  
 
@@ -54,7 +54,7 @@ Both rely on the services as the main component but have differences in several 
 | **Data storage**   | Shared database                                                                                                                       | Database per service, decentralized data                                                                                                        |
 | **Philosophy**     | Top-down, enterprise-wide initiative                                                                                                  | Bottom-up, product-orien                                                                                                                        |
 
-##### 4. What does hybrid architectural style mean? Think of your current and previous projects and try to describe which architectural styles they most likely followed.
+### 4. What does hybrid architectural style mean? Think of your current and previous projects and try to describe which architectural styles they most likely followed.
 
 The name says it all - a hybrid architectural style means a style for a system that combines two or more architecture styles (for example, monolith + microservices, or event‑driven + serverless) into a single cohesive design, taking the strengths of each while managing the trade‑offs. So it's not one "pure" style, but a mix with clearly visible signs (advantages) of several styles.
 
@@ -67,7 +67,7 @@ The functions are used for integration with other systems using Kafka (using Avr
 
 These signs tell me our solution is a hybrid of Serverless + Event‑driven + Clean Architecture.
 
-##### 5. Name several examples of the distributed architectures. What do ACID and BASE terms mean.
+### 5. Name several examples of the distributed architectures. What do ACID and BASE terms mean.
 
 Client-server, Layered Distributed Architecture (with different layers on different machines: UI, API/BL, Data access layer), Event-driven architecture.
 
@@ -90,6 +90,6 @@ BASE is a more relaxed, availability‑oriented model used by many NoSQL databa
 
 BASE systems prioritize **availability, scalability, and performance** over strict consistency – good for user feeds, logs, analytics, and large‑scale distributed services.
 
-##### 6. Name several use cases where Serverless architecture would be beneficial.
+### 6. Name several use cases where Serverless architecture would be beneficial.
 
 Serverless is a good style for the applications no need to worry about scaling or long-running infrastructure. Typical usage cases are event-driven architectures (Kafka, Service Bus, etc), batch and background jobs with scheduled runs and POCs implementation - works like "pay as you go".
