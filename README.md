@@ -11,7 +11,7 @@ docker-compose up -d
 dotnet test
 ```
 
-**Important**: Integration tests won't work without Docker Compose running. MongoDB needs to be at `localhost:27017`.
+**Important**: Integration tests won't work without Docker Compose running. MongoDB needs to be at `localhost:27017`. Please, check settings.json for correctness (example file is provided)
 
 ## What This Project Does
 
