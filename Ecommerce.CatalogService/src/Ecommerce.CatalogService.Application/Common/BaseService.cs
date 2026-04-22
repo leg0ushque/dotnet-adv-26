@@ -21,7 +21,7 @@ namespace Ecommerce.CatalogService.Application.Common
         {
             var entity = await _repository.GetByIdAsync(id);
 
-            return _mapper.Map<TDto>(entity);
+            return entity == null ? null : _mapper.Map<TDto>(entity);
         }
 
         public async Task<List<TDto>> GetAllAsync()

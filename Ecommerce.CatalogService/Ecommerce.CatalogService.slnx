@@ -6,5 +6,7 @@
     <Project Path="src/Ecommerce.CatalogService.Persistence/Ecommerce.CatalogService.Persistence.csproj" />
   </Folder>
   <Folder Name="/tests/">
+    <Project Path="tests/Ecommerce.CatalogService.IntegrationTests/Ecommerce.CatalogService.IntegrationTests.csproj" />
+    <Project Path="tests/Ecommerce.CatalogService.UnitTests/Ecommerce.CatalogService.UnitTests.csproj" />
   </Folder>
 </Solution>
