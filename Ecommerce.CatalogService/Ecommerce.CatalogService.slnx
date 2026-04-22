@@ -2,6 +2,7 @@
   <Folder Name="/src/">
     <Project Path="src/Ecommerce.CatalogService.Application/Ecommerce.CatalogService.Application.csproj" Id="3579f7f0-c4f3-4e60-af8c-13e6afc13dc5" />
     <Project Path="src/Ecommerce.CatalogService.Domain/Ecommerce.CatalogService.Domain.csproj" Id="662ddf9f-9fba-423e-a993-64907f4fb818" />
+    <Project Path="src/Ecommerce.CatalogService.Persistence/Ecommerce.CatalogService.Persistence.csproj" />
   </Folder>
   <Folder Name="/tests/">
   </Folder>
