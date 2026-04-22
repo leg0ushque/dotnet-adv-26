@@ -1,0 +1,7 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/Ecommerce.CatalogService.Domain/Ecommerce.CatalogService.Domain.csproj" Id="662ddf9f-9fba-423e-a993-64907f4fb818" />
+  </Folder>
+  <Folder Name="/tests/">
+  </Folder>
+</Solution>
