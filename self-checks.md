@@ -1,3 +1,80 @@
+# 04. Layered Architectures
+
+### 1. Name examples of the layered architecture. Do they differ or just extend each other?
+
+N-layer, Onion, Hexagon.
+
+N-layer is about splitting UI, BL and DAL and making them be dependent only one way (UI on BL, DAL on BL).  
+
+Onion is about having Domain layer (entities, value objects, exceptions) as core, the application-wide layer containing the application-specific logic, and the layers interacting with the app (UI, Infrastructure, APIs).
+
+Hexagon (ports and adapters) specifies the separate parts that talk with the "outside world". These are called ports, and the adapters are separate parts that interact with the app through ports. The specific part is, again, the fact that the adapters (and in some implementations the ports too) are autonomous and separate (separate UI apps or outer APIs).  
+
+The main idea in all three is the same: dependencies should point inward, not outward. These items can be useful in specific cases (like UI migration, DB replacement), and the choice depends on Domain complexity and extensibility/testability requirements.
+
+### 2. Is the below layered architecture correct and why? Is it possible from C to use B? from A to use C?
+
+```mermaid
+%%{ init : { "theme" : "default", "flowchart" : { "curve" : "stepBefore" }}}%%
+flowchart TB
+    A[Block A] --> B[Block B]
+    B --> C[Block C]
+    C --> B
+    A --> C
+
+    %% Legend
+    subgraph Legend [Legend]
+        direction LR
+        L1[Layer]
+        L2[Layer]
+        L1 -- "Allowed to use" --> L2
+    end
+```
+
+By "correct" layered architecture we mean the one where: 
+* Dependencies should be one‑way “downward”: higher layers can use lower layers, but NOT the other way round.
+- A “layer” typically means a horizontal concern group (e.g., A, B, C are layers), and each layer should only know about layers below it, never about layers above it.
+
+The architecture in the diagram in not correct because there are some dependency‑flow rule violations:
+* C uses B. Lower layer depends on higher. This is a classic example of circular dependency which is not allowed in layered architecture.
+- A uses C directly bypassing B. A layer-skipping dependency which also breaks classic layered architecture.
+
+So, in a layered (not modular) architecture  
+* C can't use B - that will possibly lead to issues in maintaining  
+* A can't use B, it's recommended to pass this reference through the intermediate layer B.  
+otherwise we are talking not about a layered architecture but something different (possible spaghetti?)
+
+### 3. Is DDD a type of layered architecture? What is Anemic model? Is it really an antipattern?
+
+The name (Domain Driven Design) says it all: a design which prioritize reflecting the real world business domain in the code with concepts like ubiquitous language, bounded contexts, aggregates, entities, and value objects. DDD is often implemented with layered, onion, or hexagonal architecture but not tied to any of them.
+
+An anemic domain model is a model where domain objects mostly store data, while all meaningful behavior lives in services. For DDD that is usually considered an anti-pattern because it turns the domain objects into passive DTO-like structures with pushing business rules outward. At the same time, anemic model may be acceptable, for example, in the cases with simple domain or the system is mostly CRUD (no complex logic) - the more domain complexity grows the more advantages of DDD are lost.
+
+### 4. What are architectural anti-patterns? Discuss at least three, think of any on your current or previous projects.
+
+Architectural anti-patterns are recurring design mistakes that make systems harder to understand, change, test, or scale - structural problems that affect the whole system. Some of my "well-known" in practice are God object, Circular Dependency, Tight coupling and Spaghetti code.
+
+God object is about some class/module that accumulates too much responsibility, so becomes hard to change because every feature ends up touching it.
+
+Circular dependency is about referencing of two or more modules on each other (dependency), which makes the system fragile and difficult to evolve or test - the practice showed some modules were impossible to test as a result.
+
+At the same time Tight coupling is a problem of business logic directly depending on database, UI, or framework details, so changes in technical concerns leak into the domain.
+
+Spaghetti means that object-oriented language capabilities are ignored and a separate function is written for almost every business process, and only the code author is able to work in it. That way reusage or extension of the code becomes hard to handle.
+
+All of them were mostly solved by following SOLID principles with analyzing the dependencies graph to avoid "leakages".
+
+### 5. What do Testability, Extensibility and Scalability NFRs mean. How would you ensure you reached them? Does Clean Architecture cover these NFRs?
+
+Testability means it’s easy to check if your system works - it won't require a lot of setups or confusion. To make software more testable, it's required to focus on modularity, encapsulation, loose coupling, high cohesion, clear interfaces, dependency injection, testable architecture patterns (like MVC or Clean Architecture), automated testing support, mocking/stubbing, and good test data management.
+
+Extensibility means new features can be added or changes can be made without breaking everything or rewriting big chunks of code. That is achieved by designing the your system in modules, using clear abstractions, and not hardcoded things. This way changes are local and don’t affect unrelated parts.
+
+Scalability means the system can handle more users, data, or work without slowing down or becoming hard to manage. It’s not just about hardware but also about whether your code and team can grow. Scalability can be improved by making services stateless, using caching, processing things asynchronously, and dividing the system into clear parts.
+
+Clean Architecture helps with all three by separating business logic from frameworks and infrastructure, making things easier to test and extend. It can also help with scalability by making parts easier to replace or split. At the same time CA is not a fix for all the issues but just a tool in a skilled hand, so just one of the things to cover NFR alongside team work & patterns applied.
+
+---
 # 03. Architectural Styles and Patterns
 
 ### 1. What are the cons and pros of the Monolith architectural style?

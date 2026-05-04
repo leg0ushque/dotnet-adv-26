@@ -1,0 +1,6 @@
+{
+  "ConnectionStrings": {
+    "connectionString": "mongodb://<username>:<password>@localhost:<port>/"
+  },
+  "databaseName": "CartDb"
+}
