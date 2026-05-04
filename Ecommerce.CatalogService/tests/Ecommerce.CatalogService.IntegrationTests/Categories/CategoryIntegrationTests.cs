@@ -1,5 +1,6 @@
 using Ecommerce.CatalogService.Application.Categories.DTOs;
 using Ecommerce.CatalogService.Application.Categories.Services;
+using Ecommerce.CatalogService.Application.Categories.Validators;
 using Ecommerce.CatalogService.Domain.Entities;
 using Ecommerce.CatalogService.Domain.Exceptions;
 using Ecommerce.CatalogService.IntegrationTests.Fixtures;
@@ -20,8 +21,10 @@ namespace Ecommerce.CatalogService.IntegrationTests.Categories
             _fixture.ClearDatabase();
 
             var repository = new GenericRepository<Category>(_fixture.Context);
-            var mapper = _fixture.Services.GetRequiredService<AutoMapper.IMapper>(); 
-            _categoryService = new CategoryService(repository, mapper); 
+            var mapper = _fixture.Services.GetRequiredService<AutoMapper.IMapper>();
+            var createValidator = new CreateCategoryValidator();
+            var updateValidator = new UpdateCategoryValidator();
+            _categoryService = new CategoryService(repository, createValidator, updateValidator, mapper); 
         }
 
         [Fact]

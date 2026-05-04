@@ -5,8 +5,8 @@ namespace Ecommerce.CartService.BusinessLogic.Validators
 {
     public class CartDtoValidator : AbstractValidator<CartDto>
     {
-        public const decimal MinPrice = 0m;
-        public const int MinQuantity = 0;
+        public const decimal MinPrice = default;
+        public const int MinQuantity = default;
 
         public CartDtoValidator()
         {

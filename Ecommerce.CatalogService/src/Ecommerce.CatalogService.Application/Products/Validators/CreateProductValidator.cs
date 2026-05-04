@@ -1,4 +1,5 @@
 using Ecommerce.CatalogService.Application.Products.DTOs;
+using Ecommerce.CatalogService.Domain;
 using FluentValidation;
 
 namespace Ecommerce.CatalogService.Application.Products.Validators
@@ -9,16 +10,17 @@ namespace Ecommerce.CatalogService.Application.Products.Validators
         {
             RuleFor(x => x.Name)
                 .NotEmpty().WithMessage("Name is required.")
-                .MaximumLength(50).WithMessage("Name must not exceed 50 characters.");
+                .MaximumLength(Constants.MaxCategoryNameLength)
+                .WithMessage($"Name must not exceed {Constants.MaxCategoryNameLength} characters.");
 
             RuleFor(x => x.CategoryId)
                 .NotEmpty().WithMessage("CategoryId is required.");
 
             RuleFor(x => x.Price)
-                .GreaterThan(0).WithMessage("Price must be greater than 0.");
+                .GreaterThan(Constants.MinProductPrice).WithMessage("Price must be greater than 0.");
 
             RuleFor(x => x.Amount)
-                .GreaterThanOrEqualTo(0).WithMessage("Amount must be a positive integer.");
+                .GreaterThan(Constants.MinProductAmount).WithMessage("Amount must be a positive integer.");
 
             RuleFor(x => x.ImageUrl)
                 .Must(BeAValidUrl).When(x => !string.IsNullOrWhiteSpace(x.ImageUrl))

@@ -5,6 +5,7 @@ using Ecommerce.CatalogService.Application.Common.Interfaces;
 using Ecommerce.CatalogService.Domain.Entities;
 using Ecommerce.CatalogService.Domain.Exceptions;
 using FluentAssertions;
+using FluentValidation;
 using Moq;
 using System.Linq.Expressions;
 
@@ -12,6 +13,8 @@ namespace Ecommerce.CatalogService.UnitTests.Categories
 {
     public class CategoryServiceTests
     {
+        private readonly Mock<IValidator<CreateCategoryDto>> _createValidator;
+        private readonly Mock<IValidator<UpdateCategoryDto>> _updateValidator;
         private readonly Mock<IRepository<Category>> _mockRepository;
         private readonly Mock<IMapper> _mockMapper;
         private readonly CategoryService _service;
@@ -20,6 +23,8 @@ namespace Ecommerce.CatalogService.UnitTests.Categories
         {
             _mockRepository = new Mock<IRepository<Category>>();
             _mockMapper = new Mock<IMapper>();
+            _createValidator = new();
+            _updateValidator = new();
 
             _mockMapper.Setup(x => x.Map<CategoryDto>(It.IsAny<Category>()))
                 .Returns((Category source) => new CategoryDto
@@ -51,7 +56,7 @@ namespace Ecommerce.CatalogService.UnitTests.Categories
                     source.ImageUrl,
                     source.ParentCategoryId));
 
-            _service = new CategoryService(_mockRepository.Object, _mockMapper.Object);
+            _service = new CategoryService(_mockRepository.Object, _createValidator.Object, _updateValidator.Object, _mockMapper.Object);
         }
 
         [Fact]
@@ -147,6 +152,13 @@ namespace Ecommerce.CatalogService.UnitTests.Categories
                 c.ImageUrl == dto.ImageUrl &&
                 c.ParentCategoryId == dto.ParentCategoryId
             )), Times.Once);
+
+            _createValidator.Verify(v => v.ValidateAndThrow(
+                It.Is<CreateCategoryDto>(d => 
+                d.Name == dto.Name 
+                && d.ImageUrl == dto.ImageUrl 
+                && d.ParentCategoryId == dto.ParentCategoryId)), 
+                Times.Once());
         }
 
         [Fact]
@@ -172,6 +184,13 @@ namespace Ecommerce.CatalogService.UnitTests.Categories
             _mockRepository.Verify(r => r.CreateAsync(It.Is<Category>(c =>
                 c.ParentCategoryId == "parent-cat-id"
             )), Times.Once);
+
+            _createValidator.Verify(v => v.ValidateAndThrow(
+                It.Is<CreateCategoryDto>(d =>
+                d.Name == dto.Name
+                && d.ImageUrl == dto.ImageUrl
+                && d.ParentCategoryId == dto.ParentCategoryId)),
+                Times.Once());
         }
 
         [Fact]
@@ -203,6 +222,13 @@ namespace Ecommerce.CatalogService.UnitTests.Categories
                 c.ImageUrl == updateDto.ImageUrl &&
                 c.ParentCategoryId == updateDto.ParentCategoryId
             )), Times.Once);
+
+            _updateValidator.Verify(v => v.ValidateAndThrow(
+                It.Is<UpdateCategoryDto>(d =>
+                d.Name == updateDto.Name
+                && d.ImageUrl == updateDto.ImageUrl
+                && d.ParentCategoryId == updateDto.ParentCategoryId)),
+                Times.Once());
         }
 
         [Fact]
@@ -225,6 +251,13 @@ namespace Ecommerce.CatalogService.UnitTests.Categories
             await act.Should().ThrowAsync<EntityNotFoundException>();
 
             _mockRepository.Verify(r => r.UpdateAsync(It.IsAny<Category>()), Times.Never);
+
+            _updateValidator.Verify(v => v.ValidateAndThrow(
+                It.Is<UpdateCategoryDto>(d =>
+                d.Name == updateDto.Name
+                && d.ImageUrl == updateDto.ImageUrl
+                && d.ParentCategoryId == updateDto.ParentCategoryId)),
+                Times.Once());
         }
 
         [Fact]

@@ -1,4 +1,5 @@
 using Ecommerce.CatalogService.Application.Categories.DTOs;
+using Ecommerce.CatalogService.Domain;
 using FluentValidation;
 
 namespace Ecommerce.CatalogService.Application.Categories.Validators
@@ -9,7 +10,7 @@ namespace Ecommerce.CatalogService.Application.Categories.Validators
         {
             RuleFor(x => x.Name)
                 .NotEmpty().WithMessage("Name is required.")
-                .MaximumLength(50).WithMessage("Name must not exceed 50 characters.");
+                .MaximumLength(Constants.MaxCategoryNameLength).WithMessage("Name must not exceed 50 characters.");
 
             RuleFor(x => x.ImageUrl)
                 .Must(BeAValidUrl).When(x => !string.IsNullOrWhiteSpace(x.ImageUrl))

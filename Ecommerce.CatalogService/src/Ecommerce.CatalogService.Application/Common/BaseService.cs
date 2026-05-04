@@ -2,17 +2,23 @@
 using Ecommerce.CatalogService.Application.Common.Interfaces;
 using Ecommerce.CatalogService.Domain.Entities;
 using Ecommerce.CatalogService.Domain.Exceptions;
+using FluentValidation;
 
 namespace Ecommerce.CatalogService.Application.Common
 {
-    public abstract class BaseService<TEntity, TDto, TCreateDto, TUpdateDto>(IRepository<TEntity> repository, IMapper mapper)
-        : IService<TDto, TCreateDto, TUpdateDto>
-        where TEntity : class
-        where TCreateDto : class
-        where TUpdateDto : class
-        where TDto : class
+    public abstract class BaseService<TEntity, TDto, TCreateDto, TUpdateDto>(
+        IRepository<TEntity> repository, 
+        IValidator<TCreateDto> createValidator,
+        IValidator<TUpdateDto> updateValidator,
+        IMapper mapper) : IService<TDto, TCreateDto, TUpdateDto>
+            where TEntity : class
+            where TCreateDto : class
+            where TUpdateDto : class
+            where TDto : class
     {
         private readonly IRepository<TEntity> _repository = repository;
+        private readonly IValidator<TCreateDto> _createValidator = createValidator;
+        private readonly IValidator<TUpdateDto> _updateValidator = updateValidator;
         private readonly IMapper _mapper = mapper;
 
         public abstract void UpdateEntityDetails(TEntity entityToUpdate, TUpdateDto updateDto);
@@ -31,17 +37,21 @@ namespace Ecommerce.CatalogService.Application.Common
             return [.. entities.Select(_mapper.Map<TDto>)];
         }
 
-        public Task<string> CreateAsync(TCreateDto dto)
+        public async Task<string> CreateAsync(TCreateDto dto)
         {
+            await _createValidator.ValidateAndThrowAsync(dto);
+
             var entity = _mapper.Map<TEntity>(dto);
 
-            return _repository.CreateAsync(entity);
+            return await _repository.CreateAsync(entity);
         }
 
         public async Task UpdateAsync(string id, TUpdateDto dto)
         {
             var entity = await _repository.GetByIdAsync(id) ??
                 throw new EntityNotFoundException(nameof(Product), id);
+
+            await _updateValidator.ValidateAndThrowAsync(dto);
 
             UpdateEntityDetails(entity, dto);
 
