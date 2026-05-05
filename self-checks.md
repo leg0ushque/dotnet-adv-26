@@ -2,38 +2,90 @@
 
 ### 1. Explain the difference between terms: REST and RESTful. What are the six constraints?
 
-answer
+REST is an architectural style for distributed systems (typically - for Web APIs) based on a stateless, client-server interaction using a uniform interface. 
+RESTful refers to applications or APIs that implement REST principles (this way they *are* RESTful)
+
+The six constraints are
+* Client-Server - separation of responsibilities (client is for UI and user state, server is for data storage and business logic)
+* Stateless - name speaks for itself - server doesn't have any state. Each request contains all the information to process it. Useful for scaling and reliability 
+* Cacheability - caching shall be applied to resources when applicable, and then the responses must explicitly indicate whether they can be cached (e.g. using HTTP Cache-Control and Expires). Caching can be implemented on the client side or somewhere in the middle (like proxy). Improves performance.
+* Layered System - can combine a couple of layers (cache, auth, logic) into one, the client may even not know about these "intermediaries". Increases scalability and security.
+* Uniform interface - using JSON or XML for data or a kind of a unified contract between client and server. That "contract" means resource identification by URI, usage of standardized operations through HTTP methods - GET, POST, PUT, DELETE and so on; self-descriptive messages (e.g. with status codes) and HATEOAS implementation.  Makes standard universal to use. 
+* Code on Demand (Optional, rarely used) - to support things such as widgets. Server can send executable code (e.g. JS) to the client for extension or customization of client behavior.
 
 ### 2. HTTP Request Methods (the difference) and HTTP Response codes. What is idempotency? Is HTTP the only protocol supported by the REST?
 
-answer
+The operation may be considered idempotent if it's execution leads to same result. 
+HTTP Request method - is a description of operation client wants to perform on a resource.
+
+| Method  | Description                                                                           | Idempotency                                                                        |
+| ------- | ------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------- |
+| GET     | Retrieve a resource. No request body required. Should not change state                | Yes                                                                                |
+| POST    | Create or update a resource. Has request body                                         | No (repeating the same request will create multiple resources)                     |
+| PUT     | Replace the **whole** resource at a specific URI (in some APIs - create if not exist) | Yes (replacement of same value leads to same result)                               |
+| DELETE  | Remove a resource                                                                     | Yes, if deletion of already-deleted resource is treated as success                 |
+| PATCH   | Partial update. Unlike PUT, makes **little** updates in a resource - "patches"        | Depends. A patch that replaces a string is idempotent, but value increment is not. |
+HTTP Response code - is a description of result of the operation ("whether the action succeeded and why) as a part of server reply.
+There are 5 HTTP response codes levels (and popular examples)
+* 1XX - Informational
+* 2XX - Success (200 OK, 201 Created)
+* 3XX - Redirection
+* 4XX - Client error (400 Bad Request, 401 Unauthorized, 403 Forbidden, 404 Not Found)
+* 5XX - Server error
+
+There are holywars about what to return, e.g. GetById may "return 200 + empty array" or "404" - based on strategy chosen on a project (to my mind, filtering by route parameter items/123 can return 404 but items?id=123 may return 200+empty array).
+
+REST is an architectural style, so it's designed not just for HTTP. HTTP is the most popular transport for RESTful APIs as it follows all the REST constraints. The other commonly mentioned options are FPT, SMPT, sometimes WebSocket.
+
 ### 3. What are the advantages of statelessness in RESTful services?
 
-answer
+Scalability and simplicity mostly. Any server node can handle any request, so it makes horizontal scaling easier - this way we also have better fault tolerance. Performance and maintainability also take place because of simplification - server doesn't need to manage session state or synchronize client data across requests.
+
 ### 4. How can caching be organized in RESTful services?
 
-answer
+It can be organized on server side (cache DB results, computed responses, etc; or usage of distributed cache like Redis) and client side (when a resource is marked as cacheable).
+
 ### 5. How can versioning be organized in RESTful services?
 
-answer
+Most popular ways are URL-based, header-based, query-params based. Another way is domain based (v1.api.myapp.com)
+
 ### 6. What are the best practices of resource naming?
 
-answer
+Based practices are
+* Use nouns for resources: /items, /users, not /getUserById
+* Use plural for collections: /items not /items
+* Use HTTP verbs for actions instead of verbs in the URL.
+* Use query parameters for filtering, sorting and pagination
+* Keep URLs simple, readable, avoid deep nesting.
 
 ### 7. What are OpenAPI and Swagger? What implementations/libraries for .NET exist? When would you prefer to generate API docs automatically and when manually?
 
-answer
+OpenAPI is a specification for describing APIs in a machine-readable format (JSON, YAML). Swagger is a set of tools for implementing and utilizing the OpenAPI specification. For example, generating the OpenAPI spec JSON file, and creating a test UI for it. Swashbuckle is the only one I've ever used, but there are also NSwag and Microsoft.AspNetCore.OpenApi. 
+
+Well, it's always easier to generate a documentation automatically, no need to worry about manual support.
+
 ### 8. What is OData? When will you choose to follow it and when not?
 
-answer
+Open Data Protocol is a REST-based protocol for building data-driven APIs that support rich querying (filtering, sorting, pagination,projections). It defines Entity Data Model which is obviously indended to be used for querying some entities. It also specifies the CRUD operations. So that all combined makes it useful for apps that heavily operate with data objects. 
+
+When to use - there is a data-driven backend with need in exposion of powerful, flexible querying without designing many custom endpoints. Useful for reporting, admin tools, etc. 
+
+When NOT to use - in cases with tightly controlled endpoints, custom business rules or limited client querying (because of security and performance reasons)
 
 ### 9. What is Richardson Maturity Model? Is it always a good idea to reach the 3rd level of maturity?
 
-answer
+RMM is a set of grades for how is API RESTful. Has 4 levels:
+* level 0 - Swamp of POX". Single URI, single HTTP method (usually POST), mutiple logical operations in one endpoint.
+* level 1 - Resources. Each endpoint corresponds to a specific resource (/items, /users). Every URI has one responsibility
+* level 2 - HTTP verbs and standard status codes usage.
+* level 3 - HATEOAS. Hypermedia as the engine of application state. Responses include hypermedia links for clients to discover and navigate the API dynamically.
+
+Usually most APIs stop at level 2, because strict following level 3 may overkill simple APIs or internal services with not a wide set of operations over the resource.
 
 ### 10. What does pros and cons REST have in comparison with other web API types?
 
-answer
+It is simple, widely understood (HTTP verbs, status codes, JSON format commonly), scalable and cache-friendly. Supports lot of tools (OpenAPI, Swagger, Postman, etc) and libraries for multiple languages. Statelessness is a big advantage.
+At the same time, it may be over-fetching or under-fetching (return more or less data then the client needs), GraphQL may be for flexible here. Statelessness may be another downside when it's necessary to have a state obviously. Or another case is streaming data: REST is not designed for that.
 
 ---
 # 04. Layered Architectures
