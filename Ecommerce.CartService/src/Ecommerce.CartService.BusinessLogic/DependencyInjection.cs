@@ -14,6 +14,8 @@ namespace Ecommerce.CartService.BusinessLogic
 
             services.AddScoped<ICreateValidator<CartDto>, CartDtoCreateValidator>();
             services.AddScoped<IUpdateValidator<CartDto>, CartDtoUpdateValidator>();
+            services.AddScoped<ICreateValidator<CartItemDto>, CartItemDtoCreateValidator>();
+            services.AddScoped<IUpdateValidator<CartItemDto>, CartItemDtoUpdateValidator>();
 
             services.AddDataAccessServices(connectionString, databaseName);
 

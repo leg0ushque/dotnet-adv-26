@@ -10,6 +10,7 @@ namespace Ecommerce.CartService.BusinessLogic.Mappings
         {
             CreateMap<Cart, CartDto>().ReverseMap();
             CreateMap<Image, ImageDto>().ReverseMap();
+            CreateMap<CartItem, CartItemDto>().ReverseMap();
         }
     }
 }

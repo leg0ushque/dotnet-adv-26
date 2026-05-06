@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using Ecommerce.CartService.BusinessLogic.Dtos;
 using Ecommerce.CartService.BusinessLogic.Results;
 using Ecommerce.CartService.BusinessLogic.Validators;
 using Ecommerce.CartService.DataAccess.Repositories;
@@ -14,7 +15,7 @@ namespace Ecommerce.CartService.BusinessLogic.Services
         IUpdateValidator<TDto> updateValidator,
         IMapper mapper) : IService<TEntity, TDto>
             where TEntity : class
-            where TDto : class
+            where TDto : class, IDto
     {
         private readonly IRepository<TEntity> _repository = repository;
         private readonly ICreateValidator<TDto> _createValidator = createValidator;
@@ -48,6 +49,36 @@ namespace Ecommerce.CartService.BusinessLogic.Services
             return [.. entities.Select(_mapper.Map<TDto>)];
         }
 
+        public async Task<Result<TDto>> GetByIdAsync(string id)
+        {
+            var entity = await _repository.GetByIdAsync(id);
+
+            if (entity == null)
+                return Result.Failure<TDto>(Error.NotFound(EntityName, id));
+
+            return Result.Success(_mapper.Map<TDto>(entity));
+        }
+
+        public async Task<Result> UpdateAsync(string id, TDto dto)
+        {
+            var entity = await _repository.GetByIdAsync(id);
+
+            if (entity == null)
+                return Result.Failure(Error.NotFound(EntityName, id));
+
+            var validationResult = await _updateValidator.ValidateAsync(dto);
+
+            if (!validationResult.IsValid)
+            {
+                var errors = string.Join("; ", validationResult.Errors.Select(e => e.ErrorMessage));
+                return Result.Failure(Error.Validation("Validation.Failed", errors));
+            }
+
+            await _repository.UpdateAsync(id, entity);
+
+            return Result.Success();
+        }
+
         public async Task<Result> DeleteAsync(string id)
         {
             var entity = await _repository.GetByIdAsync(id);
@@ -59,5 +90,6 @@ namespace Ecommerce.CartService.BusinessLogic.Services
 
             return Result.Success();
         }
+
     }
 }

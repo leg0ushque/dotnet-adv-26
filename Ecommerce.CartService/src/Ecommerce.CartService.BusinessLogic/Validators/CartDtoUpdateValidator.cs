@@ -12,17 +12,6 @@ namespace Ecommerce.CartService.BusinessLogic.Validators
         {
             RuleFor(x => x.Id)
                 .NotEmpty().WithMessage("Id is required.");
-
-            RuleFor(x => x.Name)
-                .NotEmpty().WithMessage("Name is required.");
-
-            RuleFor(x => x.Price)
-                .GreaterThan(MinPrice).When(x => x.Price.HasValue)
-                .WithMessage("Price must be non-negative.");
-
-            RuleFor(x => x.Quantity)
-                .GreaterThanOrEqualTo(MinQuantity)
-                .NotEmpty().WithMessage("Quantity must be non-negative.");
         }
     }
 }
