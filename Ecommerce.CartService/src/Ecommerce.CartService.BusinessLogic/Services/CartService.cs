@@ -1,16 +1,19 @@
-﻿using Ecommerce.CartService.BusinessLogic.Dtos;
-using Ecommerce.CartService.BusinessLogic.Mappings;
+﻿using AutoMapper;
+using Ecommerce.CartService.BusinessLogic.Dtos;
+using Ecommerce.CartService.BusinessLogic.Validators;
 using Ecommerce.CartService.DataAccess.Entities;
 using Ecommerce.CartService.DataAccess.Repositories;
-using FluentValidation;
 
 namespace Ecommerce.CartService.BusinessLogic.Services
 {
+
     public class CartService(
         IRepository<Cart> repository,
-        IValidator<CartDto> validator,
-        IMappingService<Cart, CartDto> mapper)
-        : BaseService<Cart, CartDto>(repository, validator, mapper)
+        ICreateValidator<CartDto> createValidator,
+        IUpdateValidator<CartDto> updateValidator,
+        IMapper mapper)
+        : BaseService<Cart, CartDto>(repository, createValidator, updateValidator, mapper), ICartService
     {
+        protected override string EntityName => "Cart";
     }
 }
