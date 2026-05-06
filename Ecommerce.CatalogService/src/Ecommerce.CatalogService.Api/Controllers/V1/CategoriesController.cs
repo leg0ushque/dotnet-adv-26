@@ -1,0 +1,82 @@
+using Asp.Versioning;
+using Ecommerce.CatalogService.Api.Models;
+using Ecommerce.CatalogService.Application.Categories.DTOs;
+using Ecommerce.CatalogService.Application.Categories.Interfaces;
+using Microsoft.AspNetCore.Mvc;
+
+namespace Ecommerce.CatalogService.Api.Controllers.V1
+{
+    [ApiController]
+    [ApiVersion("1.0")]
+    [Route("api/v{version:apiVersion}/[controller]")]
+    [Produces("application/json")]
+    public class CategoriesController(ICategoryService categoryService) : ControllerBase
+    {
+        private readonly ICategoryService _categoryService = categoryService;
+
+        [HttpGet]
+        [ProducesResponseType(typeof(List<CategoryDto>), StatusCodes.Status200OK)]
+        public async Task<ActionResult<List<CategoryDto>>> GetCategories()
+        {
+            var categories = await _categoryService.GetAllAsync();
+            return Ok(categories);
+        }
+
+
+        /// <summary>
+        /// Creates a new category
+        /// </summary>
+        /// <param name="createDto">Category creation data</param>
+        /// <returns>Created category ID</returns>
+        [HttpPost]
+        [ProducesResponseType(typeof(string), StatusCodes.Status201Created)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        public async Task<ActionResult<string>> CreateCategory([FromBody] CreateCategoryDto createDto)
+        {
+            var result = await _categoryService.CreateAsync(createDto);
+
+            if (result.IsFailure)
+                return BadRequest(new { error = result.Error!.Message });
+
+            return CreatedAtAction(nameof(GetCategory), new { id = result.Value }, result.Value);
+        }
+
+        [HttpPut("{id}")]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public async Task<IActionResult> UpdateCategory(string id, [FromBody] UpdateCategoryDto updateDto)
+        {
+            var result = await _categoryService.UpdateAsync(id, updateDto);
+
+            if (result.IsFailure)
+            {
+                return result.Error!.Type switch
+                {
+                    Application.Common.Results.ErrorType.NotFound => NotFound(new { error = result.Error.Message }),
+                    Application.Common.Results.ErrorType.Validation => BadRequest(new { error = result.Error.Message }),
+                    _ => StatusCode(500, new { error = result.Error.Message })
+                };
+            }
+
+            return NoContent();
+        }
+
+        /// <summary>
+        /// Deletes a category and all related products
+        /// </summary>
+        /// <param name="id">Category ID</param>
+        [HttpDelete("{id}")]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public async Task<IActionResult> DeleteCategory(string id)
+        {
+            var result = await _categoryService.DeleteCategoryWithProductsAsync(id);
+
+            if (result.IsFailure)
+                return NotFound(new { error = result.Error!.Message });
+
+            return NoContent();
+        }
+    }
+}

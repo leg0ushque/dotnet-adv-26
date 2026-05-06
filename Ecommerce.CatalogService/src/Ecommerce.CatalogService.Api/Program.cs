@@ -1,5 +1,7 @@
 
 using System;
+using Asp.Versioning;
+using Ecommerce.CatalogService.Api.Configuration;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.DependencyInjection;
@@ -7,6 +9,8 @@ using Microsoft.EntityFrameworkCore;
 using Ecommerce.CatalogService.Persistence;
 using Ecommerce.CatalogService.Application;
 using Ecommerce.CatalogService.Persistence.Data;
+using Microsoft.Extensions.Options;
+using Swashbuckle.AspNetCore.SwaggerGen;
 
 namespace Ecommerce.CatalogService.Api
 {
@@ -19,7 +23,24 @@ namespace Ecommerce.CatalogService.Api
             builder.Services.AddPersistence(builder.Configuration);
             builder.Services.AddApplication();
 
-            builder.Services.AddOpenApi();
+            builder.Services.AddControllers();
+
+            builder.Services.AddApiVersioning(options =>
+            {
+                options.DefaultApiVersion = new ApiVersion(1, 0);
+                options.AssumeDefaultVersionWhenUnspecified = true;
+                options.ReportApiVersions = true;
+                options.ApiVersionReader = ApiVersionReader.Combine(
+                    new UrlSegmentApiVersionReader(),
+                    new HeaderApiVersionReader("X-Api-Version"));
+            }).AddApiExplorer(options =>
+            {
+                options.GroupNameFormat = "'v'VVV";
+                options.SubstituteApiVersionInUrl = true;
+            });
+
+            builder.Services.AddTransient<IConfigureOptions<SwaggerGenOptions>, ConfigureSwaggerOptions>();
+            builder.Services.AddSwaggerGen();
 
             var app = builder.Build();
 
@@ -31,10 +52,22 @@ namespace Ecommerce.CatalogService.Api
 
             if (app.Environment.IsDevelopment())
             {
-                app.MapOpenApi();
+                app.UseSwagger();
+                app.UseSwaggerUI(options =>
+                {
+                    var descriptions = app.DescribeApiVersions();
+                    foreach (var description in descriptions)
+                    {
+                        var url = $"/swagger/{description.GroupName}/swagger.json";
+                        var name = description.GroupName.ToUpperInvariant();
+                        options.SwaggerEndpoint(url, name);
+                    }
+                });
             }
 
             app.UseHttpsRedirection();
+            app.MapControllers();
+
             app.Run();
         }
     }
