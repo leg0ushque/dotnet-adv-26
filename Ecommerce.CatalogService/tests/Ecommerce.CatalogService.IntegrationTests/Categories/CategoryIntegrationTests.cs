@@ -20,11 +20,12 @@ namespace Ecommerce.CatalogService.IntegrationTests.Categories
             _fixture = fixture;
             _fixture.ClearDatabase();
 
-            var repository = new GenericRepository<Category>(_fixture.Context);
+            var categoryRepository = new GenericRepository<Category>(_fixture.Context);
+            var productRepository = new GenericRepository<Product>(_fixture.Context);
             var mapper = _fixture.Services.GetRequiredService<AutoMapper.IMapper>();
             var createValidator = new CreateCategoryValidator();
             var updateValidator = new UpdateCategoryValidator();
-            _categoryService = new CategoryService(repository, createValidator, updateValidator, mapper); 
+            _categoryService = new CategoryService(categoryRepository, productRepository, createValidator, updateValidator, mapper); 
         }
 
         [Fact]
@@ -37,11 +38,12 @@ namespace Ecommerce.CatalogService.IntegrationTests.Categories
                 ParentCategoryId = null
             };
 
-            var categoryId = await _categoryService.CreateAsync(dto);
+            var result = await _categoryService.CreateAsync(dto);
 
-            categoryId.Should().NotBeNullOrWhiteSpace();
+            result.IsSuccess.Should().BeTrue();
+            result.Value.Should().NotBeNullOrWhiteSpace();
 
-            var savedCategory = await _fixture.Context.Categories.FindAsync(categoryId);
+            var savedCategory = await _fixture.Context.Categories.FindAsync(result.Value);
             savedCategory.Should().NotBeNull();
             savedCategory!.Name.Should().Be("Electronics");
             savedCategory.ImageUrl.Should().Be("https://example.com/electronics.jpg");
@@ -57,20 +59,22 @@ namespace Ecommerce.CatalogService.IntegrationTests.Categories
 
             var result = await _categoryService.GetByIdAsync(category.Id);
 
-            result.Should().NotBeNull();
-            result.Id.Should().Be(category.Id);
-            result.Name.Should().Be("Books");
-            result.ImageUrl.Should().Be("https://example.com/books.jpg");
+            result.IsSuccess.Should().BeTrue();
+            result.Value.Id.Should().Be(category.Id);
+            result.Value.Name.Should().Be("Books");
+            result.Value.ImageUrl.Should().Be("https://example.com/books.jpg");
         }
 
         [Fact]
-        public async Task GetByIdAsync_WithNonExistentId_ShouldReturnNull()
+        public async Task GetByIdAsync_WithNonExistentId_ShouldReturnFailure()
         {
             var nonExistentId = Guid.NewGuid().ToString();
 
-            var entity = await _categoryService.GetByIdAsync(nonExistentId);
+            var result = await _categoryService.GetByIdAsync(nonExistentId);
 
-            entity.Should().BeNull();
+            result.IsFailure.Should().BeTrue();
+            result.Error.Should().NotBeNull();
+            result.Error!.Type.Should().Be(Ecommerce.CatalogService.Application.Common.Results.ErrorType.NotFound);
         }
 
         [Fact]
@@ -117,7 +121,7 @@ namespace Ecommerce.CatalogService.IntegrationTests.Categories
         }
 
         [Fact]
-        public async Task UpdateAsync_WithNonExistentId_ShouldThrowEntityNotFoundException()
+        public async Task UpdateAsync_WithNonExistentId_ShouldReturnFailure()
         {
             var nonExistentId = Guid.NewGuid().ToString();
             var updateDto = new UpdateCategoryDto
@@ -127,9 +131,11 @@ namespace Ecommerce.CatalogService.IntegrationTests.Categories
                 ParentCategoryId = null
             };
 
-            var act = async () => await _categoryService.UpdateAsync(nonExistentId, updateDto);
+            var result = await _categoryService.UpdateAsync(nonExistentId, updateDto);
 
-            await act.Should().ThrowAsync<EntityNotFoundException>();
+            result.IsFailure.Should().BeTrue();
+            result.Error.Should().NotBeNull();
+            result.Error!.Type.Should().Be(Ecommerce.CatalogService.Application.Common.Results.ErrorType.NotFound);
         }
 
         [Fact]
@@ -159,7 +165,10 @@ namespace Ecommerce.CatalogService.IntegrationTests.Categories
                 ParentCategoryId = parentCategory.Id
             };
 
-            var subCategoryId = await _categoryService.CreateAsync(subCategoryDto);
+            var result = await _categoryService.CreateAsync(subCategoryDto);
+
+            result.IsSuccess.Should().BeTrue();
+            var subCategoryId = result.Value;
 
             var savedSubCategory = await _fixture.Context.Categories.FindAsync(subCategoryId);
             savedSubCategory.Should().NotBeNull();

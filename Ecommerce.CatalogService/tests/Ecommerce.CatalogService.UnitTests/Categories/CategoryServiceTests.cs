@@ -15,13 +15,15 @@ namespace Ecommerce.CatalogService.UnitTests.Categories
     {
         private readonly Mock<IValidator<CreateCategoryDto>> _createValidator;
         private readonly Mock<IValidator<UpdateCategoryDto>> _updateValidator;
-        private readonly Mock<IRepository<Category>> _mockRepository;
+        private readonly Mock<IRepository<Category>> _mockCategoryRepository;
+        private readonly Mock<IRepository<Product>> _mockProductRepository;
         private readonly Mock<IMapper> _mockMapper;
         private readonly CategoryService _service;
 
         public CategoryServiceTests()
         {
-            _mockRepository = new Mock<IRepository<Category>>();
+            _mockCategoryRepository = new Mock<IRepository<Category>>();
+            _mockProductRepository = new Mock<IRepository<Product>>();
             _mockMapper = new Mock<IMapper>();
             _createValidator = new();
             _updateValidator = new();
@@ -56,7 +58,13 @@ namespace Ecommerce.CatalogService.UnitTests.Categories
                     source.ImageUrl,
                     source.ParentCategoryId));
 
-            _service = new CategoryService(_mockRepository.Object, _createValidator.Object, _updateValidator.Object, _mockMapper.Object);
+            _createValidator.Setup(v => v.ValidateAsync(It.IsAny<CreateCategoryDto>(), default))
+                .ReturnsAsync(new FluentValidation.Results.ValidationResult());
+
+            _updateValidator.Setup(v => v.ValidateAsync(It.IsAny<UpdateCategoryDto>(), default))
+                .ReturnsAsync(new FluentValidation.Results.ValidationResult());
+
+            _service = new CategoryService(_mockCategoryRepository.Object, _mockProductRepository.Object, _createValidator.Object, _updateValidator.Object, _mockMapper.Object);
         }
 
         [Fact]
@@ -65,31 +73,32 @@ namespace Ecommerce.CatalogService.UnitTests.Categories
             var categoryId = "cat-123";
             var category = new Category(categoryId, "Electronics", "https://example.com/image.jpg", null);
 
-            _mockRepository
+            _mockCategoryRepository
                 .Setup(r => r.GetByIdAsync(It.IsAny<string>()))
                 .ReturnsAsync(category);
 
             var result = await _service.GetByIdAsync(categoryId);
 
-            result.Should().NotBeNull();
-            result.Id.Should().Be(categoryId);
-            result.Name.Should().Be("Electronics");
-            result.ImageUrl.Should().Be("https://example.com/image.jpg");
-            result.ParentCategoryId.Should().BeNull();
+            result.IsSuccess.Should().BeTrue();
+            result.Value.Id.Should().Be(categoryId);
+            result.Value.Name.Should().Be("Electronics");
+            result.Value.ImageUrl.Should().Be("https://example.com/image.jpg");
+            result.Value.ParentCategoryId.Should().BeNull();
         }
 
         [Fact]
-        public async Task GetByIdAsync_WhenCategoryDoesNotExist_ReturnsNull()
+        public async Task GetByIdAsync_WhenCategoryDoesNotExist_ReturnsFailure()
         {
             var categoryId = "nonexistent-id";
 
-            _mockRepository
+            _mockCategoryRepository
                 .Setup(r => r.GetByIdAsync(It.IsAny<string>()))
                 .ReturnsAsync((Category?)null);
 
-            var entity = await _service.GetByIdAsync(categoryId);
+            var result = await _service.GetByIdAsync(categoryId);
 
-            entity.Should().BeNull();
+            result.IsFailure.Should().BeTrue();
+            result.Error.Should().NotBeNull();
         }
 
         [Fact]
@@ -102,7 +111,7 @@ namespace Ecommerce.CatalogService.UnitTests.Categories
                 new ("cat-3", "Smartphones", null, "cat-1")
             };
 
-            _mockRepository
+            _mockCategoryRepository
                 .Setup(r => r.GetAllAsync(null))
                 .ReturnsAsync(categories);
 
@@ -114,13 +123,12 @@ namespace Ecommerce.CatalogService.UnitTests.Categories
             result[2].Name.Should().Be("Smartphones");
             result[2].ParentCategoryId.Should().Be("cat-1");
         }
-
         [Fact]
         public async Task GetAllAsync_WhenNoCategories_ReturnsEmptyList()
         {
-            _mockRepository
+            _mockCategoryRepository
                 .Setup(r => r.GetAllAsync(null))
-                .ReturnsAsync(new List<Category>());
+                .ReturnsAsync([]);
 
             var result = await _service.GetAllAsync();
 
@@ -139,25 +147,26 @@ namespace Ecommerce.CatalogService.UnitTests.Categories
 
             var createdId = "new-cat-id";
 
-            _mockRepository
+            _mockCategoryRepository
                 .Setup(r => r.CreateAsync(It.IsAny<Category>()))
                 .ReturnsAsync(createdId);
 
             var result = await _service.CreateAsync(dto);
 
-            result.Should().Be(createdId);
+            result.IsSuccess.Should().BeTrue();
+            result.Value.Should().Be(createdId);
 
-            _mockRepository.Verify(r => r.CreateAsync(It.Is<Category>(c =>
+            _mockCategoryRepository.Verify(r => r.CreateAsync(It.Is<Category>(c =>
                 c.Name == dto.Name &&
                 c.ImageUrl == dto.ImageUrl &&
                 c.ParentCategoryId == dto.ParentCategoryId
             )), Times.Once);
 
-            _createValidator.Verify(v => v.ValidateAndThrow(
+            _createValidator.Verify(v => v.ValidateAsync(
                 It.Is<CreateCategoryDto>(d => 
                 d.Name == dto.Name 
                 && d.ImageUrl == dto.ImageUrl 
-                && d.ParentCategoryId == dto.ParentCategoryId)), 
+                && d.ParentCategoryId == dto.ParentCategoryId), default), 
                 Times.Once());
         }
 
@@ -173,23 +182,24 @@ namespace Ecommerce.CatalogService.UnitTests.Categories
 
             var createdId = "new-subcategory-id";
 
-            _mockRepository
+            _mockCategoryRepository
                 .Setup(r => r.CreateAsync(It.IsAny<Category>()))
                 .ReturnsAsync(createdId);
 
             var result = await _service.CreateAsync(dto);
 
-            result.Should().Be(createdId);
+            result.IsSuccess.Should().BeTrue();
+            result.Value.Should().Be(createdId);
 
-            _mockRepository.Verify(r => r.CreateAsync(It.Is<Category>(c =>
+            _mockCategoryRepository.Verify(r => r.CreateAsync(It.Is<Category>(c =>
                 c.ParentCategoryId == "parent-cat-id"
             )), Times.Once);
 
-            _createValidator.Verify(v => v.ValidateAndThrow(
+            _createValidator.Verify(v => v.ValidateAsync(
                 It.Is<CreateCategoryDto>(d =>
                 d.Name == dto.Name
                 && d.ImageUrl == dto.ImageUrl
-                && d.ParentCategoryId == dto.ParentCategoryId)),
+                && d.ParentCategoryId == dto.ParentCategoryId), default),
                 Times.Once());
         }
 
@@ -206,33 +216,35 @@ namespace Ecommerce.CatalogService.UnitTests.Categories
                 ParentCategoryId = "parent-id"
             };
 
-            _mockRepository
+            _mockCategoryRepository
                 .Setup(r => r.GetByIdAsync(It.IsAny<string>()))
                 .ReturnsAsync(existingCategory);
 
-            _mockRepository
+            _mockCategoryRepository
                 .Setup(r => r.UpdateAsync(It.IsAny<Category>()))
                 .Returns(Task.CompletedTask);
 
-            await _service.UpdateAsync(categoryId, updateDto);
+            var result = await _service.UpdateAsync(categoryId, updateDto);
 
-            _mockRepository.Verify(r => r.UpdateAsync(It.Is<Category>(c =>
+            result.IsSuccess.Should().BeTrue();
+
+            _mockCategoryRepository.Verify(r => r.UpdateAsync(It.Is<Category>(c =>
                 c.Id == categoryId &&
                 c.Name == updateDto.Name &&
                 c.ImageUrl == updateDto.ImageUrl &&
                 c.ParentCategoryId == updateDto.ParentCategoryId
             )), Times.Once);
 
-            _updateValidator.Verify(v => v.ValidateAndThrow(
+            _updateValidator.Verify(v => v.ValidateAsync(
                 It.Is<UpdateCategoryDto>(d =>
                 d.Name == updateDto.Name
                 && d.ImageUrl == updateDto.ImageUrl
-                && d.ParentCategoryId == updateDto.ParentCategoryId)),
+                && d.ParentCategoryId == updateDto.ParentCategoryId), default),
                 Times.Once());
         }
 
         [Fact]
-        public async Task UpdateAsync_WhenCategoryDoesNotExist_ThrowsEntityNotFoundException()
+        public async Task UpdateAsync_WhenCategoryDoesNotExist_ReturnsFailure()
         {
             var categoryId = "nonexistent-id";
             var updateDto = new UpdateCategoryDto
@@ -242,36 +254,36 @@ namespace Ecommerce.CatalogService.UnitTests.Categories
                 ParentCategoryId = null
             };
 
-            _mockRepository
-                .Setup(r => r.GetSingleAsync(It.IsAny<Expression<Func<Category, bool>>>()))
+            _mockCategoryRepository
+                .Setup(r => r.GetByIdAsync(It.IsAny<string>()))
                 .ReturnsAsync((Category?)null);
 
-            var act = async () => await _service.UpdateAsync(categoryId, updateDto);
+            var result = await _service.UpdateAsync(categoryId, updateDto);
 
-            await act.Should().ThrowAsync<EntityNotFoundException>();
+            result.IsFailure.Should().BeTrue();
+            result.Error!.Type.Should().Be(Ecommerce.CatalogService.Application.Common.Results.ErrorType.NotFound);
 
-            _mockRepository.Verify(r => r.UpdateAsync(It.IsAny<Category>()), Times.Never);
-
-            _updateValidator.Verify(v => v.ValidateAndThrow(
-                It.Is<UpdateCategoryDto>(d =>
-                d.Name == updateDto.Name
-                && d.ImageUrl == updateDto.ImageUrl
-                && d.ParentCategoryId == updateDto.ParentCategoryId)),
-                Times.Once());
+            _mockCategoryRepository.Verify(r => r.UpdateAsync(It.IsAny<Category>()), Times.Never);
         }
 
         [Fact]
         public async Task DeleteAsync_CallsRepositoryDelete()
         {
             var categoryId = "cat-to-delete";
+            var category = new Category(categoryId, "Test", null, null);
 
-            _mockRepository
+            _mockCategoryRepository
+                .Setup(r => r.GetByIdAsync(categoryId))
+                .ReturnsAsync(category);
+
+            _mockCategoryRepository
                 .Setup(r => r.DeleteByIdAsync(categoryId))
                 .Returns(Task.CompletedTask);
 
-            await _service.DeleteAsync(categoryId);
+            var result = await _service.DeleteAsync(categoryId);
 
-            _mockRepository.Verify(r => r.DeleteByIdAsync(categoryId), Times.Once);
+            result.IsSuccess.Should().BeTrue();
+            _mockCategoryRepository.Verify(r => r.DeleteByIdAsync(categoryId), Times.Once);
         }
 
         [Fact]
@@ -284,13 +296,14 @@ namespace Ecommerce.CatalogService.UnitTests.Categories
                 ParentCategoryId = null
             };
 
-            _mockRepository
+            _mockCategoryRepository
                 .Setup(r => r.CreateAsync(It.IsAny<Category>()))
                 .ReturnsAsync("returned-id");
 
-            var createdId = await _service.CreateAsync(dto);
+            var result = await _service.CreateAsync(dto);
 
-            createdId.Should().NotBeNullOrWhiteSpace();
+            result.IsSuccess.Should().BeTrue();
+            result.Value.Should().NotBeNullOrWhiteSpace();
         }
     }
 }
