@@ -22,6 +22,35 @@ namespace Ecommerce.CatalogService.Api.Controllers.V1
             return Ok(categories);
         }
 
+        /// <summary>
+        /// Gets a specific category by ID with HATEOAS links (Level 3)
+        /// </summary>
+        /// <param name="id">Category ID</param>
+        /// <returns>Category with hypermedia links</returns>
+        [HttpGet("{id}")]
+        [ProducesResponseType(typeof(ResourceResponse<CategoryDto>), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public async Task<ActionResult<ResourceResponse<CategoryDto>>> GetCategory(string id)
+        {
+            var result = await _categoryService.GetByIdAsync(id);
+
+            if (result.IsFailure)
+                return NotFound(new { error = result.Error!.Message });
+
+            var response = new ResourceResponse<CategoryDto>
+            {
+                Data = result.Value,
+                Links =
+                [
+                    new Link { Href = Url.Action(nameof(GetCategory), new { id })!, Rel = "self", Method = HttpMethod.Get.Method },
+                    new Link { Href = Url.Action(nameof(UpdateCategory), new { id })!, Rel = "update", Method = HttpMethod.Put.Method },
+                    new Link { Href = Url.Action(nameof(DeleteCategory), new { id })!, Rel = "delete", Method = HttpMethod.Delete.Method },
+                    new Link { Href = Url.Action(nameof(GetCategories))!, Rel = "all-categories", Method = HttpMethod.Get.Method }
+                ]
+            };
+
+            return Ok(response);
+        }
 
         /// <summary>
         /// Creates a new category

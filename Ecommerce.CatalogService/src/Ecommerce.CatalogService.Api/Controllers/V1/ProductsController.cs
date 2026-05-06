@@ -34,6 +34,36 @@ namespace Ecommerce.CatalogService.Api.Controllers.V1
             return Ok(result);
         }
 
+        /// <summary>
+        /// Gets a specific product by ID with HATEOAS links (Level 3)
+        /// </summary>
+        /// <param name="id">Product ID</param>
+        /// <returns>Product with hypermedia links</returns>
+        [HttpGet("{id}")]
+        [ProducesResponseType(typeof(ResourceResponse<ProductDto>), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public async Task<ActionResult<ResourceResponse<ProductDto>>> GetProduct(string id)
+        {
+            var result = await _productService.GetByIdAsync(id);
+
+            if (result.IsFailure)
+                return NotFound(new { error = result.Error!.Message });
+
+            var response = new ResourceResponse<ProductDto>
+            {
+                Data = result.Value,
+                Links =
+                [
+                    new Link { Href = Url.Action(nameof(GetProduct), new { id })!, Rel = "self", Method = HttpMethod.Get.Method },
+                    new Link { Href = Url.Action(nameof(UpdateProduct), new { id })!, Rel = "update", Method = HttpMethod.Put.Method },
+                    new Link { Href = Url.Action(nameof(DeleteProduct), new { id })!, Rel = "delete", Method = HttpMethod.Delete.Method },
+                    new Link { Href = Url.Action(nameof(GetProducts))!, Rel = "all-products", Method = HttpMethod.Get.Method },
+                    new Link { Href = Url.Action("GetCategory", "Categories", new { id = result.Value.CategoryId })!, Rel = "category", Method = HttpMethod.Get.Method }
+                ]
+            };
+
+            return Ok(response);
+        }
 
         /// <summary>
         /// Creates a new product
