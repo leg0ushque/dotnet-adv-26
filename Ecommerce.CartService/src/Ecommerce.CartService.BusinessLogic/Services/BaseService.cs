@@ -17,10 +17,10 @@ namespace Ecommerce.CartService.BusinessLogic.Services
             where TEntity : class
             where TDto : class, IDto
     {
-        private readonly IRepository<TEntity> _repository = repository;
-        private readonly ICreateValidator<TDto> _createValidator = createValidator;
-        private readonly IUpdateValidator<TDto> _updateValidator = updateValidator;
-        private readonly IMapper _mapper = mapper;
+        protected readonly IRepository<TEntity> _repository = repository;
+        protected readonly ICreateValidator<TDto> _createValidator = createValidator;
+        protected readonly IUpdateValidator<TDto> _updateValidator = updateValidator;
+        protected readonly IMapper _mapper = mapper;
 
         protected abstract string EntityName { get; }
 

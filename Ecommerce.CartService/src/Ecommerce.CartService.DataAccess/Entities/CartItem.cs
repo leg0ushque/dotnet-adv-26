@@ -1,7 +1,12 @@
 namespace Ecommerce.CartService.DataAccess.Entities
 {
-    public class CartItem : BaseEntity
+    /// <summary>
+    /// Inline model for entities
+    /// </summary>
+    public class CartItem
     {
+        public string ItemId { get; set; }
+
         public required string Name { get; set; }
 
         public Image? Image { get; set; }

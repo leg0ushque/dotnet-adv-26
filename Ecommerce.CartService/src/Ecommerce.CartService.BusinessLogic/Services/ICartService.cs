@@ -9,7 +9,7 @@ namespace Ecommerce.CartService.BusinessLogic.Services
     {
         Task<Result> AddItemToCartAsync(string cartKey, CartItemDto item);
 
-        Task<Result> DeleteItemFromCartAsync(string cartKey, string itemId, int? amount = null);
+        Task<Result> DeleteItemFromCartAsync(string cartKey, string itemId);
 
         Task<Result<CartDto>> GetCartByKeyAsync(string cartKey);
     }

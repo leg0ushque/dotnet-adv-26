@@ -3,14 +3,14 @@ using FluentValidation;
 
 namespace Ecommerce.CartService.BusinessLogic.Validators
 {
-    public class CartItemDtoCreateValidator : AbstractValidator<CartItemDto>, ICreateValidator<CartItemDto>
+    public class CartItemDtoValidator : AbstractValidator<CartItemDto>, ICreateValidator<CartItemDto>
     {
         public const decimal MinPrice = default;
         public const int MinQuantity = default;
 
-        public CartItemDtoCreateValidator()
+        public CartItemDtoValidator()
         {
-            RuleFor(x => x.Id)
+            RuleFor(x => x.ItemId)
                 .NotEmpty().WithMessage("Id is required.");
 
             RuleFor(x => x.Name)

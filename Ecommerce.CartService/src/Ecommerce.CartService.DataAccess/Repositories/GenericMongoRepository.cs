@@ -12,7 +12,7 @@ namespace Ecommerce.CartService.DataAccess.Repositories
     public abstract class GenericMongoRepository<TEntity> : IRepository<TEntity>
         where TEntity : class, IEntity
     {
-        public abstract string CollectionName { get; }
+        protected abstract string CollectionName { get; }
 
         protected readonly IMongoCollection<TEntity> _collection;
 
