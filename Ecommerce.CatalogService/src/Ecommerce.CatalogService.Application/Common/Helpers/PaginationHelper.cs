@@ -6,7 +6,7 @@ public static class PaginationHelper
 {
     public static PaginatedResult<T> Paginate<T>(IEnumerable<T> source, PaginationOptions options)
     {
-        options.Normalize();
+        options.VerifyValues();
         var totalCount = source.Count();
         var items = source
             .Skip((options.PageNumber - 1) * options.PageSize)
