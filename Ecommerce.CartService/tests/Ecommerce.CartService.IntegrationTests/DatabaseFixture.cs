@@ -17,8 +17,8 @@ namespace Ecommerce.CartService.IntegrationTests
                 .AddJsonFile("settings.json")
                 .Build();
 
-            var connectionString = config.GetConnectionString("connectionString")!;
-            var databaseName = config.GetSection("databaseName").Value!;
+            var connectionString = config.GetConnectionString("DefaultConnection")!;
+            var databaseName = config.GetSection("DatabaseName").Value!;
 
             var mongoDbFactory = new MongoDbFactory(connectionString, databaseName);
 

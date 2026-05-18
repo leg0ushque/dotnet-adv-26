@@ -1,7 +1,7 @@
 ﻿using AutoMapper;
 using Ecommerce.CatalogService.Application.Common.Interfaces;
+using Ecommerce.CatalogService.Application.Common.Results;
 using Ecommerce.CatalogService.Domain.Entities;
-using Ecommerce.CatalogService.Domain.Exceptions;
 using FluentValidation;
 
 namespace Ecommerce.CatalogService.Application.Common
@@ -21,13 +21,18 @@ namespace Ecommerce.CatalogService.Application.Common
         private readonly IValidator<TUpdateDto> _updateValidator = updateValidator;
         private readonly IMapper _mapper = mapper;
 
+        protected abstract string EntityName { get; }
+
         public abstract void UpdateEntityDetails(TEntity entityToUpdate, TUpdateDto updateDto);
 
-        public async Task<TDto?> GetByIdAsync(string id)
+        public async Task<Result<TDto>> GetByIdAsync(string id)
         {
             var entity = await _repository.GetByIdAsync(id);
 
-            return entity == null ? null : _mapper.Map<TDto>(entity);
+            if (entity == null)
+                return Result.Failure<TDto>(Error.NotFound(EntityName, id));
+
+            return Result.Success(_mapper.Map<TDto>(entity));
         }
 
         public async Task<List<TDto>> GetAllAsync()
@@ -37,30 +42,54 @@ namespace Ecommerce.CatalogService.Application.Common
             return [.. entities.Select(_mapper.Map<TDto>)];
         }
 
-        public async Task<string> CreateAsync(TCreateDto dto)
+        public async Task<Result<string>> CreateAsync(TCreateDto dto)
         {
-            await _createValidator.ValidateAndThrowAsync(dto);
+            var validationResult = await _createValidator.ValidateAsync(dto);
+
+            if (!validationResult.IsValid)
+            {
+                var errors = string.Join("; ", validationResult.Errors.Select(e => e.ErrorMessage));
+
+                return Result.Failure<string>(Error.Validation("Validation.Failed", errors));
+            }
 
             var entity = _mapper.Map<TEntity>(dto);
+            var id = await _repository.CreateAsync(entity);
 
-            return await _repository.CreateAsync(entity);
+            return Result.Success(id);
         }
 
-        public async Task UpdateAsync(string id, TUpdateDto dto)
+        public async Task<Result> UpdateAsync(string id, TUpdateDto dto)
         {
-            var entity = await _repository.GetByIdAsync(id) ??
-                throw new EntityNotFoundException(nameof(Product), id);
+            var entity = await _repository.GetByIdAsync(id);
 
-            await _updateValidator.ValidateAndThrowAsync(dto);
+            if (entity == null)
+                return Result.Failure(Error.NotFound(EntityName, id));
+
+            var validationResult = await _updateValidator.ValidateAsync(dto);
+
+            if (!validationResult.IsValid)
+            {
+                var errors = string.Join("; ", validationResult.Errors.Select(e => e.ErrorMessage));
+                return Result.Failure(Error.Validation("Validation.Failed", errors));
+            }
 
             UpdateEntityDetails(entity, dto);
-
             await _repository.UpdateAsync(entity);
+
+            return Result.Success();
         }
 
-        public Task DeleteAsync(string id)
+        public async Task<Result> DeleteAsync(string id)
         {
-            return _repository.DeleteByIdAsync(id);
+            var entity = await _repository.GetByIdAsync(id);
+
+            if (entity == null)
+                return Result.Failure(Error.NotFound(EntityName, id));
+
+            await _repository.DeleteByIdAsync(id);
+
+            return Result.Success();
         }
     }
 }

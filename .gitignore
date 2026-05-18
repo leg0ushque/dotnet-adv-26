@@ -482,3 +482,5 @@ $RECYCLE.BIN/
 *.swp
 /.obsidian
 appsettings.json
+Ecommerce.CartService/Ecommerce.CartService.Api/settings.json
+Ecommerce.CartService/tests/Ecommerce.CartService.IntegrationTests/settings.json

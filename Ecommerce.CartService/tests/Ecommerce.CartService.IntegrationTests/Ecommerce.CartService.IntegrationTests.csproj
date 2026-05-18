@@ -7,8 +7,26 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Remove="settings.example.json" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="settings.example.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+    </Content>
+    <Content Include="settings.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+    </Content>
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="AutoFixture" Version="4.18.1" />
     <PackageReference Include="FluentAssertions" Version="6.12.0" />
+    <PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" Version="8.0.0" />
     <PackageReference Include="Microsoft.Extensions.Configuration" Version="8.0.0" />
     <PackageReference Include="Microsoft.Extensions.Configuration.FileExtensions" Version="8.0.0" />
     <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="8.0.0" />
@@ -21,6 +39,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\..\Ecommerce.CartService.Api\Ecommerce.CartService.Api.csproj" />
     <ProjectReference Include="..\..\src\Ecommerce.CartService.BusinessLogic\Ecommerce.CartService.BusinessLogic.csproj" />
     <ProjectReference Include="..\..\src\Ecommerce.CartService.DataAccess\Ecommerce.CartService.DataAccess.csproj" />
   </ItemGroup>

@@ -3,6 +3,7 @@
     <File Path="compose.yaml" />
   </Folder>
   <Folder Name="/src/">
+    <Project Path="Ecommerce.CartService.Api/Ecommerce.CartService.Api.csproj" />
     <Project Path="src/Ecommerce.CartService.BusinessLogic/Ecommerce.CartService.BusinessLogic.csproj" Id="d526ff73-fca3-4f21-a0a8-5df0bc5b0f1c" />
     <Project Path="src/Ecommerce.CartService.DataAccess/Ecommerce.CartService.DataAccess.csproj" Id="64a15a67-404c-49ba-a537-32395b4b8579" />
   </Folder>

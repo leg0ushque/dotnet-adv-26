@@ -1,4 +1,4 @@
-﻿using Ecommerce.CatalogService.Application.Products.DTOs;
+﻿using Ecommerce.CatalogService.Application.Common.Results;
 
 namespace Ecommerce.CatalogService.Application.Common.Interfaces
 {
@@ -8,9 +8,9 @@ namespace Ecommerce.CatalogService.Application.Common.Interfaces
         where TDto : class
     {
         Task<List<TDto>> GetAllAsync();
-        Task<TDto?> GetByIdAsync(string id);
-        Task<string> CreateAsync(TCreateDto dto);
-        Task UpdateAsync(string id, TUpdateDto dto);
-        Task DeleteAsync(string id);
+        Task<Result<TDto>> GetByIdAsync(string id);
+        Task<Result<string>> CreateAsync(TCreateDto dto);
+        Task<Result> UpdateAsync(string id, TUpdateDto dto);
+        Task<Result> DeleteAsync(string id);
     }
 }

@@ -1,11 +1,14 @@
 ﻿using AutoFixture;
+using AutoMapper;
 using Ecommerce.CartService.BusinessLogic.Dtos;
 using Ecommerce.CartService.BusinessLogic.Mappings;
 using Ecommerce.CartService.BusinessLogic.Services;
+using Ecommerce.CartService.BusinessLogic.Validators;
 using Ecommerce.CartService.DataAccess.Entities;
 using Ecommerce.CartService.DataAccess.Repositories;
 using FluentAssertions;
 using FluentValidation;
+using Microsoft.Extensions.Logging.Abstractions;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
@@ -13,19 +16,20 @@ using Xunit;
 
 namespace Ecommerce.CartService.IntegrationTests
 {
-    public abstract class IntegrationTestsBase<TEntity, TDto, TMappingService, TValidator> : IAsyncLifetime
+    public abstract class IntegrationTestsBase<TEntity, TDto, TCreateValidator, TUpdateValidator> : IAsyncLifetime
         where TEntity : IEntity
         where TDto : IDto
-        where TMappingService : IMappingService<TEntity, TDto>, new()
-        where TValidator : IValidator<TDto>, new()
+        where TCreateValidator : ICreateValidator<TDto>, new()
+        where TUpdateValidator : IUpdateValidator<TDto>, new()
     {
         protected readonly Fixture _fixture;
 
         protected readonly DatabaseFixture _dbFixture;
 
-        public required IMappingService<TEntity, TDto> _mappingService;
+        public required IMapper _mappingService;
 
-        public required IValidator<TDto> _validator;
+        public required ICreateValidator<TDto> _createValidator;
+        public required IUpdateValidator<TDto> _updateValidator;
 
         public required IService<TEntity, TDto> _service;
 
@@ -36,8 +40,13 @@ namespace Ecommerce.CartService.IntegrationTests
 
             EntitiesIds = [];
 
-            _mappingService = new TMappingService();
-            _validator = new TValidator();
+            _mappingService = new MapperConfiguration(cfg => 
+                cfg.AddProfile(new ApplicationMappingProfile()), NullLoggerFactory.Instance)
+                .CreateMapper();
+
+            _createValidator = new TCreateValidator();
+            _updateValidator = new TUpdateValidator();
+
             _service = CreateService();
         }
 

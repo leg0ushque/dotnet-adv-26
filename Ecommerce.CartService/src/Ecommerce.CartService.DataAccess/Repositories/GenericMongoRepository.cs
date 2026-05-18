@@ -1,7 +1,9 @@
 ﻿using Ecommerce.CartService.DataAccess.Entities;
 using Ecommerce.CartService.DataAccess.Factories;
 using MongoDB.Driver;
+using System;
 using System.Collections.Generic;
+using System.Linq.Expressions;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -19,6 +21,12 @@ namespace Ecommerce.CartService.DataAccess.Repositories
             _collection = mongoDbFactory.GetCollection<TEntity>(CollectionName);
         }
 
+        public async Task<string> CreateAsync(TEntity entity, CancellationToken cancellationToken = default)
+        {
+            await _collection.InsertOneAsync(entity, new InsertOneOptions(), cancellationToken);
+
+            return entity.Id;
+        }
         public async Task<List<TEntity>> GetAllAsync(CancellationToken cancellationToken = default)
         {
             var items = await _collection.FindAsync(_ => true,
@@ -27,9 +35,41 @@ namespace Ecommerce.CartService.DataAccess.Repositories
             return await items.ToListAsync(cancellationToken);
         }
 
-        public Task CreateAsync(TEntity entity, CancellationToken cancellationToken = default)
+        public async Task<TEntity> GetByIdAsync(string id, CancellationToken cancellationToken = default)
         {
-            return _collection.InsertOneAsync(entity, new InsertOneOptions(), cancellationToken);
+            var item = await _collection.FindAsync(Builders<TEntity>.Filter.Eq("_id", id),
+                cancellationToken: cancellationToken);
+
+            return await item.FirstOrDefaultAsync(cancellationToken);
+        }
+
+        public async Task<List<TEntity>> FilterAsync(Expression<Func<TEntity, bool>> expression, CancellationToken cancellationToken = default)
+        {
+            var items = await _collection.FindAsync(Builders<TEntity>.Filter.Where(expression),
+                cancellationToken: cancellationToken);
+
+            return await items.ToListAsync(cancellationToken);
+        }
+
+        public async Task<List<TEntity>> FilterAsync<TField>(Expression<Func<TEntity, TField>> field, IEnumerable<TField> values, CancellationToken cancellationToken = default)
+        {
+            var items = await _collection.FindAsync(Builders<TEntity>.Filter.In(field, values),
+                cancellationToken: cancellationToken);
+
+            return await items.ToListAsync(cancellationToken);
+        }
+
+        public Task UpdateAsync(string id, TEntity entity, CancellationToken cancellationToken = default)
+        {
+            return _collection.ReplaceOneAsync(Builders<TEntity>.Filter.Eq("_id", id), entity,
+                cancellationToken: cancellationToken);
+        }
+
+        public Task UpdateAsync<TField>(string id, Expression<Func<TEntity, TField>> field, TField newValue, CancellationToken cancellationToken = default)
+        {
+            return _collection.FindOneAndUpdateAsync(Builders<TEntity>.Filter.Eq("_id", id),
+                    Builders<TEntity>.Update.Set(field, newValue),
+                cancellationToken: cancellationToken);
         }
 
         public Task DeleteAsync(string id, CancellationToken cancellationToken = default)
