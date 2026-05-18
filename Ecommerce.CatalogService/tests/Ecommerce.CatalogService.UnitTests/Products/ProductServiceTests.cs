@@ -109,7 +109,17 @@ namespace Ecommerce.CatalogService.UnitTests.Products
             }).Skip(10).Take(10).ToList();
 
             _mockRepository.Setup(r => r.GetAllAsync(null)).ReturnsAsync(products);
-            _mockMapper.Setup(m => m.Map<List<ProductDto>>(It.IsAny<List<Product>>())).Returns(productDtos);
+
+            _mockMapper
+                .Setup(m => m.Map<List<ProductDto>>(It.IsAny<List<Product>>()))
+                .Returns((List<Product> src) => [.. src.Select(p => new ProductDto
+                {
+                    Id = p.Id,
+                    Name = p.Name,
+                    CategoryId = p.CategoryId,
+                    Price = p.Price,
+                    Amount = p.Amount
+                })]);
 
             // Act
             var result = await _productService.GetProductsAsync(null, 2, 10);
