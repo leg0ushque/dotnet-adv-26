@@ -3,11 +3,9 @@ using Ecommerce.CatalogService.Application.Categories.DTOs;
 using Ecommerce.CatalogService.Application.Categories.Services;
 using Ecommerce.CatalogService.Application.Common.Interfaces;
 using Ecommerce.CatalogService.Domain.Entities;
-using Ecommerce.CatalogService.Domain.Exceptions;
 using FluentAssertions;
 using FluentValidation;
 using Moq;
-using System.Linq.Expressions;
 
 namespace Ecommerce.CatalogService.UnitTests.Categories
 {

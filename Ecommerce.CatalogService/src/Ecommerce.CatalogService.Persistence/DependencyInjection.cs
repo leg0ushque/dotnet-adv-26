@@ -9,16 +9,34 @@ namespace Ecommerce.CatalogService.Persistence
 {
     public static class DependencyInjection
     {
-        public static IServiceCollection AddPersistence(this IServiceCollection services, IConfiguration configuration)
+        public static IServiceCollection AddPersistence(
+            this IServiceCollection services, 
+            IConfiguration configuration,
+            bool useInMemoryDatabase = false)
         {
-            var connectionString = configuration.GetConnectionString("DefaultConnection");
+            if (useInMemoryDatabase)
+            {
+                // Testing configuration: InMemory database
+                services.AddDbContext<EcommerceCatalogDbContext>(options =>
+                {
+                    options.UseInMemoryDatabase("TestDatabase");
+                    options.EnableServiceProviderCaching(false);
+                });
+            }
+            else
+            {
+                // Production configuration: SQL Server
+                var connectionString = configuration.GetConnectionString("DefaultConnection");
 
-            services.AddDbContext<EcommerceCatalogDbContext>(options =>
-                options.UseSqlServer(
-                    connectionString,
-                    b => b.MigrationsAssembly(typeof(EcommerceCatalogDbContext).Assembly.FullName)));
+                services.AddDbContext<EcommerceCatalogDbContext>(options =>
+                    options.UseSqlServer(
+                        connectionString,
+                        b => b.MigrationsAssembly(typeof(EcommerceCatalogDbContext).Assembly.FullName)));
+            }
 
-            services.AddScoped<IApplicationDbContext>(provider => provider.GetRequiredService<EcommerceCatalogDbContext>());
+            // Common services for both configurations
+            services.AddScoped<IApplicationDbContext>(provider => 
+                provider.GetRequiredService<EcommerceCatalogDbContext>());
             services.AddScoped(typeof(IRepository<>), typeof(GenericRepository<>));
 
             return services;

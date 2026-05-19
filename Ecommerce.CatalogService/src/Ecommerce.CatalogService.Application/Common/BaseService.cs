@@ -1,7 +1,6 @@
 ﻿using AutoMapper;
 using Ecommerce.CatalogService.Application.Common.Interfaces;
 using Ecommerce.CatalogService.Application.Common.Results;
-using Ecommerce.CatalogService.Domain.Entities;
 using FluentValidation;
 
 namespace Ecommerce.CatalogService.Application.Common

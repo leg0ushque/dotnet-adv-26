@@ -2,7 +2,6 @@ using Ecommerce.CatalogService.Application.Categories.DTOs;
 using Ecommerce.CatalogService.Application.Categories.Services;
 using Ecommerce.CatalogService.Application.Categories.Validators;
 using Ecommerce.CatalogService.Domain.Entities;
-using Ecommerce.CatalogService.Domain.Exceptions;
 using Ecommerce.CatalogService.IntegrationTests.Fixtures;
 using Ecommerce.CatalogService.Persistence.Repositories;
 using FluentAssertions;

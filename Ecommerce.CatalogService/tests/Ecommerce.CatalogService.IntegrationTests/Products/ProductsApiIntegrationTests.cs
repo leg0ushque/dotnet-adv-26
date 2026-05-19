@@ -2,6 +2,7 @@ using System.Net;
 using System.Net.Http.Json;
 using Ecommerce.CatalogService.Api.Models;
 using Ecommerce.CatalogService.Application.Products.DTOs;
+using Ecommerce.CatalogService.Application.Common.DTOs;
 using Ecommerce.CatalogService.IntegrationTests.Fixtures;
 using FluentAssertions;
 
@@ -124,7 +125,7 @@ namespace Ecommerce.CatalogService.IntegrationTests.Products
 
             // Assert
             response.StatusCode.Should().Be(HttpStatusCode.OK);
-            var paginatedResult = await response.Content.ReadFromJsonAsync<dynamic>();
+            var paginatedResult = await response.Content.ReadFromJsonAsync<PaginatedResult<ProductDto>>();
             paginatedResult.Should().NotBeNull();
         }
 

@@ -1,10 +1,5 @@
-
-using System;
 using Asp.Versioning;
 using Ecommerce.CatalogService.Api.Configuration;
-using Microsoft.AspNetCore.Builder;
-using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.EntityFrameworkCore;
 using Ecommerce.CatalogService.Persistence;
 using Ecommerce.CatalogService.Application;
@@ -20,7 +15,9 @@ namespace Ecommerce.CatalogService.Api
         {
             var builder = WebApplication.CreateBuilder(args);
 
-            builder.Services.AddPersistence(builder.Configuration);
+            var useInMemoryDatabase = builder.Configuration.GetValue<bool>("UseInMemoryDatabase", false);
+
+            builder.Services.AddPersistence(builder.Configuration, useInMemoryDatabase);
             builder.Services.AddApplication();
 
             builder.Services.AddControllers();
