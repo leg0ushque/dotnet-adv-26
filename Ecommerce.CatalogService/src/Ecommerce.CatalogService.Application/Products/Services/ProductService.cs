@@ -3,10 +3,13 @@ using Ecommerce.CatalogService.Application.Common;
 using Ecommerce.CatalogService.Application.Common.DTOs;
 using Ecommerce.CatalogService.Application.Common.Helpers;
 using Ecommerce.CatalogService.Application.Common.Interfaces;
+using Ecommerce.CatalogService.Application.Common.Results;
 using Ecommerce.CatalogService.Application.Products.DTOs;
 using Ecommerce.CatalogService.Application.Products.Interfaces;
+using Ecommerce.CatalogService.Domain;
 using Ecommerce.CatalogService.Domain.Entities;
 using FluentValidation;
+using System.Text.Json;
 
 namespace Ecommerce.CatalogService.Application.Products.Services
 {
@@ -15,6 +18,7 @@ namespace Ecommerce.CatalogService.Application.Products.Services
         IValidator<UpdateProductDto> updateValidator,
         IMapper mapper,
         ITransactionManager transactionManager,
+        IOutboxService outboxService)
         : BaseService<Product, ProductDto, CreateProductDto, UpdateProductDto>(
             productRepository, 
             createValidator, 
@@ -23,6 +27,9 @@ namespace Ecommerce.CatalogService.Application.Products.Services
             transactionManager), IProductService
     {
         private readonly IRepository<Product> _productRepository = productRepository;
+
+        private readonly IOutboxService _outboxService = outboxService;
+
         private readonly IMapper _mapper = mapper;
 
         protected override string EntityName => "Product";
@@ -59,6 +66,8 @@ namespace Ecommerce.CatalogService.Application.Products.Services
                 UpdateEntityDetails(product, dto);
                 await _productRepository.UpdateAsync(product);
 
+                await CreateOutboxMessageAsync(dto);
+
                 await _transactionManager.SaveChangesAsync();
                 await _transactionManager.CommitTransactionAsync();
 
@@ -83,6 +92,19 @@ namespace Ecommerce.CatalogService.Application.Products.Services
                 new PaginationOptions { PageNumber = pageNumber, PageSize = pageSize });
 
             return paginated;
+        }
+
+        private Task CreateOutboxMessageAsync(UpdateProductDto dto)
+        {
+            var options = new JsonSerializerOptions
+            {
+                PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+                WriteIndented = false
+            };
+
+            return _outboxService.AddOutboxMessageAsync(
+                JsonSerializer.Serialize(dto, options),
+                Constants.CatalogEventTypes.ProductUpdated);
         }
     }
 }

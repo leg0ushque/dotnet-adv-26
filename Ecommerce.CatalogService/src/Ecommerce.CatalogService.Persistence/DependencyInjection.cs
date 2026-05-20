@@ -32,7 +32,6 @@ namespace Ecommerce.CatalogService.Persistence
             }
             else
             {
-                // Production configuration: SQL Server
                 var connectionString = configuration.GetConnectionString("DefaultConnection");
 
                 services.AddDbContext<EcommerceCatalogDbContext>(options =>
@@ -46,6 +45,7 @@ namespace Ecommerce.CatalogService.Persistence
                 services.AddSingleton<RabbitMqConnectionFactory>();
                 services.AddSingleton<IMessagePublisher, RabbitMqPublisher>();
                 services.AddHostedService<RabbitMqTopologyInitializer>();
+                services.AddHostedService<OutboxProcessorBackgroundService>();
             }
 
             services.AddScoped<IApplicationDbContext>(provider => 
@@ -55,6 +55,8 @@ namespace Ecommerce.CatalogService.Persistence
 
             services.AddScoped<ITransactionManager, CatalogTransactionManager>();
 			
+            services.AddScoped<IOutboxService, OutboxService>();
+
             return services;
         }
     }

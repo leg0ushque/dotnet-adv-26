@@ -9,5 +9,10 @@
         public const int MinProductAmount = default;
 
         public const int DefaultMessageRetryCount = 0;
+
+        public class CatalogEventTypes
+        {
+            public const string ProductUpdated = "ProductUpdated";
+        }
     }
 }

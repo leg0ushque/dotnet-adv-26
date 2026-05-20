@@ -15,6 +15,8 @@ namespace Ecommerce.CatalogService.Persistence.Data
 
         public DbSet<Product> Products { get; set; } = null!;
 
+        public DbSet<OutboxMessage> OutboxMessages { get; set; } = null!;
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
