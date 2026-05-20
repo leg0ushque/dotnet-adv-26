@@ -39,6 +39,7 @@ namespace Ecommerce.CatalogService.Persistence
                 provider.GetRequiredService<EcommerceCatalogDbContext>());
             services.AddScoped(typeof(IRepository<>), typeof(GenericRepository<>));
 
+            services.AddScoped<ITransactionManager, CatalogTransactionManager>();
             return services;
         }
     }

@@ -9,7 +9,8 @@ namespace Ecommerce.CatalogService.Application.Common
         IRepository<TEntity> repository, 
         IValidator<TCreateDto> createValidator,
         IValidator<TUpdateDto> updateValidator,
-        IMapper mapper) : IService<TDto, TCreateDto, TUpdateDto>
+        IMapper mapper,
+        ITransactionManager transactionManager) : IService<TDto, TCreateDto, TUpdateDto>
             where TEntity : class
             where TCreateDto : class
             where TUpdateDto : class
@@ -19,6 +20,7 @@ namespace Ecommerce.CatalogService.Application.Common
         private readonly IValidator<TCreateDto> _createValidator = createValidator;
         private readonly IValidator<TUpdateDto> _updateValidator = updateValidator;
         private readonly IMapper _mapper = mapper;
+        protected readonly ITransactionManager _transactionManager = transactionManager;
 
         protected abstract string EntityName { get; }
 
@@ -55,6 +57,8 @@ namespace Ecommerce.CatalogService.Application.Common
             var entity = _mapper.Map<TEntity>(dto);
             var id = await _repository.CreateAsync(entity);
 
+            await _transactionManager.SaveChangesAsync();
+
             return Result.Success(id);
         }
 
@@ -76,6 +80,8 @@ namespace Ecommerce.CatalogService.Application.Common
             UpdateEntityDetails(entity, dto);
             await _repository.UpdateAsync(entity);
 
+            await _transactionManager.SaveChangesAsync();
+
             return Result.Success();
         }
 
@@ -87,6 +93,8 @@ namespace Ecommerce.CatalogService.Application.Common
                 return Result.Failure(Error.NotFound(EntityName, id));
 
             await _repository.DeleteByIdAsync(id);
+
+            await _transactionManager.SaveChangesAsync();
 
             return Result.Success();
         }

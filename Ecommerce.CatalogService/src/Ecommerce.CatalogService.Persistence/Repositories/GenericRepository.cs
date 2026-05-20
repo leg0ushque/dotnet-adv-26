@@ -16,8 +16,6 @@ namespace Ecommerce.CatalogService.Persistence.Repositories
 
             await _context.Set<TEntity>().AddAsync(item);
 
-            await _context.SaveChangesAsync();
-
             return item.Id;
         }
 
@@ -27,7 +25,6 @@ namespace Ecommerce.CatalogService.Persistence.Repositories
             if (entity != null)
             {
                 _context.Set<TEntity>().Remove(entity);
-                await _context.SaveChangesAsync();
             }
         }
 
@@ -53,7 +50,7 @@ namespace Ecommerce.CatalogService.Persistence.Repositories
         {
             _context.Set<TEntity>().Update(item);
 
-            await _context.SaveChangesAsync();
+            await Task.CompletedTask;
         }
     }
 }
