@@ -16,6 +16,7 @@ namespace Ecommerce.CatalogService.UnitTests.Categories
         private readonly Mock<IRepository<Category>> _mockCategoryRepository;
         private readonly Mock<IRepository<Product>> _mockProductRepository;
         private readonly Mock<IMapper> _mockMapper;
+        private readonly Mock<ITransactionManager> _mockTransactionManager;
         private readonly CategoryService _service;
 
         public CategoryServiceTests()
@@ -23,6 +24,7 @@ namespace Ecommerce.CatalogService.UnitTests.Categories
             _mockCategoryRepository = new Mock<IRepository<Category>>();
             _mockProductRepository = new Mock<IRepository<Product>>();
             _mockMapper = new Mock<IMapper>();
+            _mockTransactionManager = new Mock<ITransactionManager>();
             _createValidator = new();
             _updateValidator = new();
 
@@ -62,7 +64,7 @@ namespace Ecommerce.CatalogService.UnitTests.Categories
             _updateValidator.Setup(v => v.ValidateAsync(It.IsAny<UpdateCategoryDto>(), default))
                 .ReturnsAsync(new FluentValidation.Results.ValidationResult());
 
-            _service = new CategoryService(_mockCategoryRepository.Object, _mockProductRepository.Object, _createValidator.Object, _updateValidator.Object, _mockMapper.Object);
+            _service = new CategoryService(_mockCategoryRepository.Object, _mockProductRepository.Object, _createValidator.Object, _updateValidator.Object, _mockMapper.Object, _mockTransactionManager.Object);
         }
 
         [Fact]

@@ -11,7 +11,6 @@ namespace Ecommerce.CatalogService.IntegrationTests.Fixtures
         {
             builder.ConfigureAppConfiguration((context, config) =>
             {
-                // Signal to use InMemory database for testing
                 config.AddInMemoryCollection(new Dictionary<string, string?>
                 {
                     ["UseInMemoryDatabase"] = "true"
