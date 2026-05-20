@@ -18,3 +18,13 @@ services:
       ME_CONFIG_BASICAUTH_ENABLED: true
       ME_CONFIG_BASICAUTH_USERNAME: mongoexpressuser
       ME_CONFIG_BASICAUTH_PASSWORD: mongoexpresspass
+  
+  rabbitmq:
+    image: rabbitmq:3-management
+    restart: always
+    ports:
+      - 5672:5672      # RabbitMQ
+      - 15672:15672    # Management UI
+    environment:
+      RABBITMQ_DEFAULT_USER: user
+      RABBITMQ_DEFAULT_PASS: password
