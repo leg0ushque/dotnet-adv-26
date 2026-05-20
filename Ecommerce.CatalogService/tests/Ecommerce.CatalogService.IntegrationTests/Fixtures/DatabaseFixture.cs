@@ -24,7 +24,7 @@ namespace Ecommerce.CatalogService.IntegrationTests.Fixtures
                 .Build();
 
             services.AddLogging();
-            services.AddPersistence(configuration, useInMemoryDatabase: true);
+            services.AddPersistence(configuration, true);
             services.AddApplication();
 
             Services = services.BuildServiceProvider();

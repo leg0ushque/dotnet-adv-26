@@ -16,10 +16,10 @@ namespace Ecommerce.CatalogService.Application.Common
             where TUpdateDto : class
             where TDto : class
     {
-        private readonly IRepository<TEntity> _repository = repository;
-        private readonly IValidator<TCreateDto> _createValidator = createValidator;
-        private readonly IValidator<TUpdateDto> _updateValidator = updateValidator;
-        private readonly IMapper _mapper = mapper;
+        protected readonly IRepository<TEntity> _repository = repository;
+        protected readonly IValidator<TCreateDto> _createValidator = createValidator;
+        protected readonly IValidator<TUpdateDto> _updateValidator = updateValidator;
+        protected readonly IMapper _mapper = mapper;
         protected readonly ITransactionManager _transactionManager = transactionManager;
 
         protected abstract string EntityName { get; }
@@ -62,7 +62,7 @@ namespace Ecommerce.CatalogService.Application.Common
             return Result.Success(id);
         }
 
-        public async Task<Result> UpdateAsync(string id, TUpdateDto dto)
+        public virtual async Task<Result> UpdateAsync(string id, TUpdateDto dto)
         {
             var entity = await _repository.GetByIdAsync(id);
 

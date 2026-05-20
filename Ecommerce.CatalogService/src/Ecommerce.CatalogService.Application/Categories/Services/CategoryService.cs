@@ -13,8 +13,9 @@ namespace Ecommerce.CatalogService.Application.Categories.Services
         IRepository<Product> productRepository,
         IValidator<CreateCategoryDto> createValidator, 
         IValidator<UpdateCategoryDto> updateValidator, 
-        IMapper mapper)
-        : BaseService<Category, CategoryDto, CreateCategoryDto, UpdateCategoryDto>(categoryRepository, createValidator, updateValidator, mapper), ICategoryService
+        IMapper mapper,
+        ITransactionManager transactionManager)
+        : BaseService<Category, CategoryDto, CreateCategoryDto, UpdateCategoryDto>(categoryRepository, createValidator, updateValidator, mapper, transactionManager), ICategoryService
     {
         private readonly IRepository<Category> _categoryRepository = categoryRepository;
         private readonly IRepository<Product> _productRepository = productRepository;
@@ -34,16 +35,29 @@ namespace Ecommerce.CatalogService.Application.Categories.Services
             if (category == null)
                 return Result.Failure(Error.NotFound(EntityName, id));
 
-            var productsInCategory = await _productRepository.GetAllAsync(p => p.CategoryId == id);
-
-            foreach (var product in productsInCategory)
+            try
             {
-                await _productRepository.DeleteByIdAsync(product.Id);
+                await _transactionManager.BeginTransactionAsync();
+
+                var productsInCategory = await _productRepository.GetAllAsync(p => p.CategoryId == id);
+
+                foreach (var product in productsInCategory)
+                {
+                    await _productRepository.DeleteByIdAsync(product.Id);
+                }
+
+                await _categoryRepository.DeleteByIdAsync(id);
+
+                await _transactionManager.SaveChangesAsync();
+                await _transactionManager.CommitTransactionAsync();
+
+                return Result.Success();
             }
-
-            await _categoryRepository.DeleteByIdAsync(id);
-
-            return Result.Success();
+            catch
+            {
+                await _transactionManager.RollbackTransactionAsync();
+                throw;
+            }
         }
     }
 }

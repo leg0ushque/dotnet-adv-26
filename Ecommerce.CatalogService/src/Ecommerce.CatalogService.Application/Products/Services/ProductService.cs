@@ -13,12 +13,14 @@ namespace Ecommerce.CatalogService.Application.Products.Services
     public class ProductService(IRepository<Product> productRepository, 
         IValidator<CreateProductDto> createValidator,
         IValidator<UpdateProductDto> updateValidator,
-        IMapper mapper)
+        IMapper mapper,
+        ITransactionManager transactionManager,
         : BaseService<Product, ProductDto, CreateProductDto, UpdateProductDto>(
             productRepository, 
             createValidator, 
             updateValidator, 
-            mapper), IProductService
+            mapper,
+            transactionManager), IProductService
     {
         private readonly IRepository<Product> _productRepository = productRepository;
         private readonly IMapper _mapper = mapper;
@@ -33,6 +35,41 @@ namespace Ecommerce.CatalogService.Application.Products.Services
                 updateDto.Amount, 
                 updateDto.Description, 
                 updateDto.ImageUrl);
+
+        public override async Task<Result> UpdateAsync(string id, UpdateProductDto dto)
+        {
+            var product = await _productRepository.GetByIdAsync(id);
+
+            if (product == null)
+                return Result.Failure(Error.NotFound(EntityName, id));
+
+            var validationResult = await _updateValidator.ValidateAsync(dto);
+
+            if (!validationResult.IsValid)
+            {
+                var errors = string.Join("; ", validationResult.Errors.Select(e => e.ErrorMessage));
+                return Result.Failure(Error.Validation("Validation.Failed", errors));
+            }
+
+            try
+            {
+
+                await _transactionManager.BeginTransactionAsync();
+
+                UpdateEntityDetails(product, dto);
+                await _productRepository.UpdateAsync(product);
+
+                await _transactionManager.SaveChangesAsync();
+                await _transactionManager.CommitTransactionAsync();
+
+                return Result.Success();
+            }
+            catch
+            {
+                await _transactionManager.RollbackTransactionAsync();
+                throw;
+            }
+        }
 
         public async Task<PaginatedResult<ProductDto>> GetProductsAsync(string? categoryId, int pageNumber, int pageSize)
         {
