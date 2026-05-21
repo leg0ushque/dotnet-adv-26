@@ -6,6 +6,7 @@
     <Project Path="Ecommerce.CartService.Api/Ecommerce.CartService.Api.csproj" />
     <Project Path="src/Ecommerce.CartService.BusinessLogic/Ecommerce.CartService.BusinessLogic.csproj" Id="d526ff73-fca3-4f21-a0a8-5df0bc5b0f1c" />
     <Project Path="src/Ecommerce.CartService.DataAccess/Ecommerce.CartService.DataAccess.csproj" Id="64a15a67-404c-49ba-a537-32395b4b8579" />
+    <Project Path="src/Ecommerce.CartService.Messaging/Ecommerce.CartService.Messaging.csproj" />
   </Folder>
   <Folder Name="/tests/">
     <Project Path="tests/Ecommerce.CartService.DataAccess.UnitTests/Ecommerce.CartService.DataAccess.UnitTests.csproj" />
