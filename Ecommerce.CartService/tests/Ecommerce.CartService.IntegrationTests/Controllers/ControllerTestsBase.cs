@@ -1,3 +1,4 @@
+using Ecommerce.CartService.Api;
 using Microsoft.AspNetCore.Mvc.Testing;
 using System.Net.Http;
 using System.Net.Http.Json;
