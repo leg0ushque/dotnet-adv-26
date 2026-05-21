@@ -1,28 +1,20 @@
-using System.Text;
-using System.Text.Json;
 using Ecommerce.CatalogService.Application.Common.Interfaces;
 using Ecommerce.CatalogService.Persistence.Configuration;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using RabbitMQ.Client;
+using System.Text;
 
 namespace Ecommerce.CatalogService.Persistence.Messaging
 {
-    public sealed class RabbitMqPublisher : IMessagePublisher
+    public class RabbitMqPublisher(
+        RabbitMqConnectionFactory connectionFactory,
+        IOptions<RabbitMqOptions> options,
+        ILogger<RabbitMqPublisher> logger) : IMessagePublisher
     {
-        private readonly RabbitMqConnectionFactory _connectionFactory;
-        private readonly RabbitMqOptions _options;
-        private readonly ILogger<RabbitMqPublisher> _logger;
-
-        public RabbitMqPublisher(
-            RabbitMqConnectionFactory connectionFactory, 
-            IOptions<RabbitMqOptions> options, 
-            ILogger<RabbitMqPublisher> logger)
-        {
-            _connectionFactory = connectionFactory;
-            _options = options.Value;
-            _logger = logger;
-        }
+        private readonly RabbitMqConnectionFactory _connectionFactory = connectionFactory;
+        private readonly RabbitMqOptions _options = options.Value;
+        private readonly ILogger<RabbitMqPublisher> _logger = logger;
 
         public async Task PublishAsync(string serializedBody, string eventTypeName, CancellationToken cancellationToken = default)
         {
@@ -30,7 +22,8 @@ namespace Ecommerce.CatalogService.Persistence.Messaging
 
             await using var channel = await connection.CreateChannelAsync(cancellationToken: cancellationToken);
 
-            var routingKey = $"catalog.{eventTypeName.ToLowerInvariant()}";
+            var routingKey = _options.RoutingKeyPrefix + eventTypeName.ToLowerInvariant();
+
             var body = Encoding.UTF8.GetBytes(serializedBody);
 
             var props = new BasicProperties

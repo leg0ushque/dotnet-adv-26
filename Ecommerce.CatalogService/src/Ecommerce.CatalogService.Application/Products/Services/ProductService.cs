@@ -1,6 +1,7 @@
 using AutoMapper;
 using Ecommerce.CatalogService.Application.Common;
 using Ecommerce.CatalogService.Application.Common.DTOs;
+using Ecommerce.CatalogService.Application.Common.DTOs.QueueMessages;
 using Ecommerce.CatalogService.Application.Common.Helpers;
 using Ecommerce.CatalogService.Application.Common.Interfaces;
 using Ecommerce.CatalogService.Application.Common.Results;
@@ -26,11 +27,7 @@ namespace Ecommerce.CatalogService.Application.Products.Services
             mapper,
             transactionManager), IProductService
     {
-        private readonly IRepository<Product> _productRepository = productRepository;
-
         private readonly IOutboxService _outboxService = outboxService;
-
-        private readonly IMapper _mapper = mapper;
 
         protected override string EntityName => "Product";
 
@@ -45,7 +42,7 @@ namespace Ecommerce.CatalogService.Application.Products.Services
 
         public override async Task<Result> UpdateAsync(string id, UpdateProductDto dto)
         {
-            var product = await _productRepository.GetByIdAsync(id);
+            var product = await _repository.GetByIdAsync(id);
 
             if (product == null)
                 return Result.Failure(Error.NotFound(EntityName, id));
@@ -60,13 +57,14 @@ namespace Ecommerce.CatalogService.Application.Products.Services
 
             try
             {
-
                 await _transactionManager.BeginTransactionAsync();
 
                 UpdateEntityDetails(product, dto);
-                await _productRepository.UpdateAsync(product);
+                await _repository.UpdateAsync(product);
 
-                await CreateOutboxMessageAsync(dto);
+                var message = _mapper.Map<UpdatedProductMessage>(dto);
+                message.Id = id;
+                await CreateOutboxMessageAsync(message);
 
                 await _transactionManager.SaveChangesAsync();
                 await _transactionManager.CommitTransactionAsync();
@@ -83,8 +81,8 @@ namespace Ecommerce.CatalogService.Application.Products.Services
         public async Task<PaginatedResult<ProductDto>> GetProductsAsync(string? categoryId, int pageNumber, int pageSize)
         {
             var allProducts = string.IsNullOrWhiteSpace(categoryId)
-                ? await _productRepository.GetAllAsync()
-                : await _productRepository.GetAllAsync(p => p.CategoryId == categoryId);
+                ? await _repository.GetAllAsync()
+                : await _repository.GetAllAsync(p => p.CategoryId == categoryId);
 
             var productDtos = _mapper.Map<List<ProductDto>>(allProducts);
 
@@ -94,7 +92,7 @@ namespace Ecommerce.CatalogService.Application.Products.Services
             return paginated;
         }
 
-        private Task CreateOutboxMessageAsync(UpdateProductDto dto)
+        private Task CreateOutboxMessageAsync(UpdatedProductMessage dto)
         {
             var options = new JsonSerializerOptions
             {

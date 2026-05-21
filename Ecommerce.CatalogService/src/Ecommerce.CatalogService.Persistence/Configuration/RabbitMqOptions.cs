@@ -16,7 +16,7 @@ namespace Ecommerce.CatalogService.Persistence.Configuration
 
         public string QueueName { get; set; } = "catalog_queue";
 
-        public string RoutingKey { get; set; } = "catalog.#";
+        public string RoutingKeyPrefix { get; set; } = "catalog.";
 
         public bool AutomaticRecoveryEnabled { get; set; } = true;
 
