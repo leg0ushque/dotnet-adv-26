@@ -1,4 +1,26 @@
 services:
+  sqlserver:
+    image: mcr.microsoft.com/mssql/server:2019-latest
+    container_name: sqlserver
+    environment:
+      - ACCEPT_EULA=Y
+      - SA_PASSWORD=P4ss_W0rd
+      - MSSQL_TCP_PORT=1433
+    ports:
+      - "1433:1433"
+    healthcheck:
+      test: ["CMD", "pgrep", "sqlservr"]
+      interval: 10s
+      timeout: 10s
+      retries: 10
+      start_period: 60s
+      
+  adminer:
+    image: adminer
+    restart: always
+    ports:
+      - 8082:8080
+    
   mongo:
     image: mongo
     restart: always
