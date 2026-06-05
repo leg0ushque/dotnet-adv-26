@@ -11,12 +11,20 @@
     {
       "username": "manager1",
       "enabled": true,
+      "firstName": "Manager",
+      "lastName": "One",
+      "email": "manager1@example.com",
+      "emailVerified": true,
       "credentials": [{ "type": "password", "value": "managerpass" }],
       "realmRoles": ["Manager"]
     },
     {
       "username": "customer1",
       "enabled": true,
+      "firstName": "Customer",
+      "lastName": "One",
+      "email": "customer1@example.com",
+      "emailVerified": true,
       "credentials": [{ "type": "password", "value": "customerpass" }],
       "realmRoles": ["Store customer"]
     }
@@ -27,14 +35,16 @@
       "enabled": true,
       "publicClient": false,
       "secret": "catalog-secret",
-      "redirectUris": ["http://localhost:5000/*"]
+      "redirectUris": ["http://localhost:5000/*"],
+	  "directAccessGrantsEnabled": true
     },
     {
       "clientId": "cart-service",
       "enabled": true,
       "publicClient": false,
       "secret": "cart-secret",
-      "redirectUris": ["http://localhost:5001/*"]
+      "redirectUris": ["http://localhost:5001/*"],
+	  "directAccessGrantsEnabled": true
     }
   ]
 }
