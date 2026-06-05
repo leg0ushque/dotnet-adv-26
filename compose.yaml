@@ -61,6 +61,9 @@ services:
       - KC_DB_PASSWORD=P4ss_W0rd
       - KEYCLOAK_ADMIN=admin
       - KEYCLOAK_ADMIN_PASSWORD=admin
+      - KC_HTTP_ENABLED=true
+      - KC_HOSTNAME=localhost
+      - KC_HOSTNAME_STRICT=false
       - KC_IMPORT=/opt/keycloak/data/import/ecommerce-realm.json
     volumes:
       - ./ecommerce-realm.json:/opt/keycloak/data/import/ecommerce-realm.json
