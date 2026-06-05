@@ -1,3 +1,38 @@
+# 07. Security. Auth
+
+### 1. What is the difference between authentication and authorization?
+
+answer
+
+### 2. What authorization approaches can you list? What is role-based access control?
+
+answer
+
+### 3. What exactly is Identity Management (Identity and Access Management)?
+
+answer
+
+### 4. What authentication/authorization protocols do you know? What is the difference between OAuth & OpenID?
+
+answer
+
+### 5. What is Authentication/Authorization Token. What is JWT token? What other approaches except authentication/authorization, can we use with security token?
+
+answer
+
+### 6. What is Single Sign-On (SSO)? Name the steps to implement SSO. What are the benefits of SSO?
+
+answer
+
+### 7. What is the difference between Two-Factor Authentication and Multi-Factor Authentication?
+
+answer
+
+### 8. Which of the OAuth flows can be used for user (customer) and which for client (server) authentication?
+
+answer
+
+---
 # 06. Message-based architecture
 
 ### 1. What is Message Based Architecture? What is the difference between Message Based Architecture and Event Based Architecture?
