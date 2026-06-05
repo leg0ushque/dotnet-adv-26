@@ -1,4 +1,5 @@
 using AutoFixture;
+using Ecommerce.CartService.Api;
 using Ecommerce.CartService.BusinessLogic.Dtos;
 using FluentAssertions;
 using Microsoft.AspNetCore.Mvc.Testing;

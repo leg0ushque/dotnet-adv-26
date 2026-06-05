@@ -16,6 +16,7 @@
 
 	<ItemGroup>
 	  <ProjectReference Include="..\src\Ecommerce.CartService.BusinessLogic\Ecommerce.CartService.BusinessLogic.csproj" />
+	  <ProjectReference Include="..\src\Ecommerce.CartService.Messaging\Ecommerce.CartService.Messaging.csproj" />
 	</ItemGroup>
 
 </Project>

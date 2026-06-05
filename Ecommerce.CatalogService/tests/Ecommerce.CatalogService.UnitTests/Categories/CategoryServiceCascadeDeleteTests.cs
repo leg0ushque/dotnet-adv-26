@@ -15,6 +15,7 @@ namespace Ecommerce.CatalogService.UnitTests.Categories
         private readonly Mock<IValidator<CreateCategoryDto>> _mockCreateValidator;
         private readonly Mock<IValidator<UpdateCategoryDto>> _mockUpdateValidator;
         private readonly Mock<IMapper> _mockMapper;
+        private readonly Mock<ITransactionManager> _mockTransactionManager;
         private readonly CategoryService _categoryService;
 
         public CategoryServiceCascadeDeleteTests()
@@ -24,13 +25,15 @@ namespace Ecommerce.CatalogService.UnitTests.Categories
             _mockCreateValidator = new Mock<IValidator<CreateCategoryDto>>();
             _mockUpdateValidator = new Mock<IValidator<UpdateCategoryDto>>();
             _mockMapper = new Mock<IMapper>();
+            _mockTransactionManager = new Mock<ITransactionManager>();
 
             _categoryService = new CategoryService(
                 _mockCategoryRepository.Object,
                 _mockProductRepository.Object,
                 _mockCreateValidator.Object,
                 _mockUpdateValidator.Object,
-                _mockMapper.Object);
+                _mockMapper.Object,
+                _mockTransactionManager.Object);
         }
 
         [Fact]
@@ -40,8 +43,8 @@ namespace Ecommerce.CatalogService.UnitTests.Categories
             var categoryId = "cat1";
             var products = new List<Product>
             {
-                new Product("prod1", "Product 1", categoryId, 10.0m, 5),
-                new Product("prod2", "Product 2", categoryId, 20.0m, 10)
+                new("prod1", "Product 1", categoryId, 10.0m, 5),
+                new("prod2", "Product 2", categoryId, 20.0m, 10)
             };
 
             var category = new Category(categoryId, "Electronics", null, null);

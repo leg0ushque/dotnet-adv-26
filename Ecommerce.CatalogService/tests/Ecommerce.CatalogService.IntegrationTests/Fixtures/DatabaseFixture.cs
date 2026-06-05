@@ -1,8 +1,7 @@
 using Ecommerce.CatalogService.Application;
-using Ecommerce.CatalogService.Application.Common.Interfaces;
+using Ecommerce.CatalogService.Persistence;
 using Ecommerce.CatalogService.Persistence.Data;
-using Ecommerce.CatalogService.Persistence.Repositories;
-using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Ecommerce.CatalogService.IntegrationTests.Fixtures
@@ -14,18 +13,19 @@ namespace Ecommerce.CatalogService.IntegrationTests.Fixtures
 
         public DatabaseFixture()
         {
-            var dbName = Guid.NewGuid().ToString();
-
             var services = new ServiceCollection();
 
-            services.AddDbContext<EcommerceCatalogDbContext>(options =>
-                options.UseInMemoryDatabase(dbName));
+            // Build configuration with InMemory flag
+            var configuration = new ConfigurationBuilder()
+                .AddInMemoryCollection(new Dictionary<string, string?>
+                {
+                    ["UseInMemoryDatabase"] = "true"
+                })
+                .Build();
 
             services.AddLogging();
-
+            services.AddPersistence(configuration, true);
             services.AddApplication();
-
-            services.AddScoped(typeof(IRepository<>), typeof(GenericRepository<>));
 
             Services = services.BuildServiceProvider();
 

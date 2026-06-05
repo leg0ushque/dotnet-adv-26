@@ -1,8 +1,8 @@
 using Ecommerce.CatalogService.Application.Categories.DTOs;
 using Ecommerce.CatalogService.Application.Categories.Services;
 using Ecommerce.CatalogService.Application.Categories.Validators;
+using Ecommerce.CatalogService.Application.Common.Interfaces;
 using Ecommerce.CatalogService.Domain.Entities;
-using Ecommerce.CatalogService.Domain.Exceptions;
 using Ecommerce.CatalogService.IntegrationTests.Fixtures;
 using Ecommerce.CatalogService.Persistence.Repositories;
 using FluentAssertions;
@@ -25,7 +25,8 @@ namespace Ecommerce.CatalogService.IntegrationTests.Categories
             var mapper = _fixture.Services.GetRequiredService<AutoMapper.IMapper>();
             var createValidator = new CreateCategoryValidator();
             var updateValidator = new UpdateCategoryValidator();
-            _categoryService = new CategoryService(categoryRepository, productRepository, createValidator, updateValidator, mapper); 
+            var transactionManager = _fixture.Services.GetRequiredService<ITransactionManager>();
+            _categoryService = new CategoryService(categoryRepository, productRepository, createValidator, updateValidator, mapper, transactionManager); 
         }
 
         [Fact]

@@ -3,7 +3,7 @@ using Asp.Versioning.ApiExplorer;
 using AutoMapper;
 using Ecommerce.CartService.BusinessLogic;
 using Ecommerce.CartService.BusinessLogic.Mappings;
-using Microsoft.AspNetCore.Mvc.ApiExplorer;
+using Ecommerce.CartService.Messaging;
 using Microsoft.Extensions.Logging.Abstractions;
 
 namespace Ecommerce.CartService.Api
@@ -21,6 +21,9 @@ namespace Ecommerce.CartService.Api
             ArgumentException.ThrowIfNullOrWhiteSpace(databaseName, nameof(databaseName));
 
             builder.Services.AddBusinessLogicServices(connectionString, databaseName);
+
+            builder.Services.AddMessagingServices();
+
             builder.Services.AddSingleton(SetupMapper());
 
             builder.Services.AddControllers();

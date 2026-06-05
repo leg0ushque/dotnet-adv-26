@@ -15,6 +15,8 @@ namespace Ecommerce.CatalogService.UnitTests.Products
         private readonly Mock<IValidator<CreateProductDto>> _mockCreateValidator;
         private readonly Mock<IValidator<UpdateProductDto>> _mockUpdateValidator;
         private readonly Mock<IMapper> _mockMapper;
+        private readonly Mock<ITransactionManager> _mockTransactionManager;
+        private readonly Mock<IOutboxService> _mockOutboxService;
         private readonly ProductService _productService;
 
         public ProductServiceTests()
@@ -23,12 +25,16 @@ namespace Ecommerce.CatalogService.UnitTests.Products
             _mockCreateValidator = new Mock<IValidator<CreateProductDto>>();
             _mockUpdateValidator = new Mock<IValidator<UpdateProductDto>>();
             _mockMapper = new Mock<IMapper>();
+            _mockTransactionManager = new Mock<ITransactionManager>();
+            _mockOutboxService = new Mock<IOutboxService>();
 
             _productService = new ProductService(
                 _mockRepository.Object,
                 _mockCreateValidator.Object,
                 _mockUpdateValidator.Object,
-                _mockMapper.Object);
+                _mockMapper.Object,
+                _mockTransactionManager.Object,
+                _mockOutboxService.Object);
         }
 
         [Fact]
@@ -37,14 +43,14 @@ namespace Ecommerce.CatalogService.UnitTests.Products
             // Arrange
             var products = new List<Product>
             {
-                new Product("1", "Product 1", "cat1", 10.0m, 5),
-                new Product("2", "Product 2", "cat2", 20.0m, 10)
+                new("1", "Product 1", "cat1", 10.0m, 5),
+                new("2", "Product 2", "cat2", 20.0m, 10)
             };
 
             var productDtos = new List<ProductDto>
             {
-                new ProductDto { Id = "1", Name = "Product 1", CategoryId = "cat1", Price = 10.0m, Amount = 5 },
-                new ProductDto { Id = "2", Name = "Product 2", CategoryId = "cat2", Price = 20.0m, Amount = 10 }
+                new() { Id = "1", Name = "Product 1", CategoryId = "cat1", Price = 10.0m, Amount = 5 },
+                new() { Id = "2", Name = "Product 2", CategoryId = "cat2", Price = 20.0m, Amount = 10 }
             };
 
             _mockRepository.Setup(r => r.GetAllAsync(null)).ReturnsAsync(products);
@@ -68,12 +74,12 @@ namespace Ecommerce.CatalogService.UnitTests.Products
             var categoryId = "cat1";
             var products = new List<Product>
             {
-                new Product("1", "Product 1", "cat1", 10.0m, 5)
+                new("1", "Product 1", "cat1", 10.0m, 5)
             };
 
             var productDtos = new List<ProductDto>
             {
-                new ProductDto { Id = "1", Name = "Product 1", CategoryId = "cat1", Price = 10.0m, Amount = 5 }
+                new() { Id = "1", Name = "Product 1", CategoryId = "cat1", Price = 10.0m, Amount = 5 }
             };
 
             _mockRepository.Setup(r => r.GetAllAsync(It.IsAny<System.Linq.Expressions.Expression<Func<Product, bool>>>()))
@@ -107,9 +113,19 @@ namespace Ecommerce.CatalogService.UnitTests.Products
                 Price = p.Price,
                 Amount = p.Amount
             }).Skip(10).Take(10).ToList();
-
+                
             _mockRepository.Setup(r => r.GetAllAsync(null)).ReturnsAsync(products);
-            _mockMapper.Setup(m => m.Map<List<ProductDto>>(It.IsAny<List<Product>>())).Returns(productDtos);
+
+            _mockMapper
+                .Setup(m => m.Map<List<ProductDto>>(It.IsAny<List<Product>>()))
+                .Returns((List<Product> src) => [.. src.Select(p => new ProductDto
+                {
+                    Id = p.Id,
+                    Name = p.Name,
+                    CategoryId = p.CategoryId,
+                    Price = p.Price,
+                    Amount = p.Amount
+                })]);
 
             // Act
             var result = await _productService.GetProductsAsync(null, 2, 10);

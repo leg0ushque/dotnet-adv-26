@@ -1,3 +1,46 @@
+# 06. Message-based architecture
+
+### 1. What is Message Based Architecture? What is the difference between Message Based Architecture and Event Based Architecture?
+
+MBA is a design approach where different components of an application communicate by exchanging messages instead of synchronous calls or share method invocation.
+EBA based on events that represent some changes in the system that need to be handled (system reacts to them in real time)  
+So these approaches both utilize messages, but their purpose and level of coupling differ.
+EBA is primarily concerned with propagating state changes, and its not expected there these changes will be tracked and handled by someone (more decoupled approach),
+whereas MBA is about a wider range of messaging patterns (commands, queries and events) with expectation that a specific topic/queue will be read. 
+
+### 2. What is Message Broker? How do message brokers work?
+
+MB is a kind of an intermediate service (middleware) that routes, transforms and delivers messages between producers and consumers. It accepts messages, persists/queues them, applies routing/filters/transformations, retries/delivers to consumers, and supports durability, ordering, and delivery guarantees (at-most-once, at-least-once, exactly-once where supported). 
+
+### 3. When should you use message brokers?
+
+In cases asynchronous communication between services is required; decoupling microservices; reliable delivery and retry, buffering for slow consumers, and implementing pub/sub patterns.
+
+### 4. Name and describe any distribution pattern.
+
+ Publish–Subscribe is an example of disctribution pattern. Producers publish to a topic; multiple subscribers independently receive copies. Decouples producers and consumers and enables broadcasting of events or notifications.
+
+### 5. What are the advantages and disadvantages of using message broker?
+
+Advantages: decoupling, scalability, resilience (retry/dead letter queue), async processing. 
+Disadvantages: complexity, latency, message content & version coordination and consistency control, harder to debug.
+
+### 6. What is the difference between Queue and Topic?
+
+Queue - point-to-point, each message is consumed by one consumer. Cannot be re-read if no retention/DMQ is supported.  
+Topic - pub-sub schema, delivery to all subs (broadcast). Messages can be re-read using different offsets.
+
+### 7. What are the typical failures in MBA? How can you address them? What is Saga pattern?
+
+Typical failures are Message Broker Architecture (MBA) typical failures include message loss, duplicate delivery, consumer crashes, and broker bottlenecks. Address them by implementing retries with backoff, making consumers idempotent, using Dead Letter Queues (DLQs), and adopting the Saga Pattern for managing multi-service business workflows.  
+Saga is a pattern for managing distributed transactions as a sequence of local transactions. The name is inspired by concept of "saga" in literature - a long complex story involving multiple events and characters.  
+This is an approach of splitting a large transaction into a series of smaller, independent steps (local transactions), each performed by a different service. After each step, a message or event is sent to trigger the next step.  
+If a step fails, compensating transactions are executed to undo the previous steps, ensuring data consistency across services.  
+There are two main types of SAGA execution:  
+1. Choreography: Each service listens for events and triggers the next action.
+2. Orchestration: A central coordinator tells each service what to do next.
+
+---
 # 05. RESTful Web API
 
 ### 1. Explain the difference between terms: REST and RESTful. What are the six constraints?
