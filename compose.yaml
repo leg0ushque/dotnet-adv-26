@@ -4,7 +4,7 @@ services:
     container_name: sqlserver
     environment:
       - ACCEPT_EULA=Y
-      - SA_PASSWORD=P4ss_W0rd
+      - SA_PASSWORD=${SQLSERVER_SA_PASSWORD}
       - MSSQL_TCP_PORT=1433
     ports:
       - "1433:1433"
@@ -14,19 +14,29 @@ services:
       timeout: 10s
       retries: 10
       start_period: 60s
-      
+
+  sql-init-keycloak:
+    image: mcr.microsoft.com/mssql-tools
+    depends_on:
+      - sqlserver
+    entrypoint:
+      - /bin/bash
+      - -c
+      - |
+        /opt/mssql-tools/bin/sqlcmd -S sqlserver -U sa -P ${SQLSERVER_SA_PASSWORD} -Q "IF DB_ID('${KC_DBNAME}') IS NULL CREATE DATABASE ${KC_DBNAME}"
+
   adminer:
     image: adminer
     restart: always
     ports:
       - 8082:8080
-    
+
   mongo:
     image: mongo
     restart: always
     environment:
-      MONGO_INITDB_ROOT_USERNAME: root
-      MONGO_INITDB_ROOT_PASSWORD: example
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_INITDB_ROOT_USERNAME}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_INITDB_ROOT_PASSWORD}
     ports:
       - 27017:27017
 
@@ -36,37 +46,36 @@ services:
     ports:
       - 8081:8081
     environment:
-      ME_CONFIG_MONGODB_URL: mongodb://root:example@mongo:27017/
+      ME_CONFIG_MONGODB_URL: mongodb://${MONGO_INITDB_ROOT_USERNAME}:${MONGO_INITDB_ROOT_PASSWORD}@mongo:27017/
       ME_CONFIG_BASICAUTH_ENABLED: true
-      ME_CONFIG_BASICAUTH_USERNAME: mongoexpressuser
-      ME_CONFIG_BASICAUTH_PASSWORD: mongoexpresspass
-  
+      ME_CONFIG_BASICAUTH_USERNAME: ${ME_CONFIG_BASICAUTH_USERNAME}
+      ME_CONFIG_BASICAUTH_PASSWORD: ${ME_CONFIG_BASICAUTH_PASSWORD}
+
   rabbitmq:
     image: rabbitmq:3-management
     restart: always
     ports:
-      - 5672:5672      # RabbitMQ
-      - 15672:15672    # Management UI
+      - 5672:5672
+      - 15672:15672
     environment:
-      RABBITMQ_DEFAULT_USER: user
-      RABBITMQ_DEFAULT_PASS: password
-      
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_DEFAULT_USER}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_DEFAULT_PASS}
+
   keycloak:
     image: quay.io/keycloak/keycloak:26.6.0
     container_name: keycloak
     environment:
       - KC_DB=mssql
-      - KC_DB_URL=jdbc:sqlserver://sqlserver:1433;databaseName=keycloakdb;trustServerCertificate=true
-      - KC_DB_USERNAME=sa
-      - KC_DB_PASSWORD=P4ss_W0rd
-      - KEYCLOAK_ADMIN=admin
-      - KEYCLOAK_ADMIN_PASSWORD=admin
+      - KC_DB_URL=jdbc:sqlserver://sqlserver:1433;databaseName=${KC_DBNAME};trustServerCertificate=true
+      - KC_DB_USERNAME=${KC_DB_USERNAME}
+      - KC_DB_PASSWORD=${KC_DB_PASSWORD}
+      - KC_BOOTSTRAP_ADMIN_USERNAME=admin
+      - KC_BOOTSTRAP_ADMIN_PASSWORD=${KEYCLOAK_ADMIN_PASSWORD}
       - KC_HTTP_ENABLED=true
       - KC_HOSTNAME=localhost
       - KC_HOSTNAME_STRICT=false
-      - KC_IMPORT=/opt/keycloak/data/import/ecommerce-realm.json
     volumes:
-      - ./ecommerce-realm.json:/opt/keycloak/data/import/ecommerce-realm.json
+      - ./Ecommerce-realm.json:/opt/keycloak/data/import/Ecommerce-realm.json
     ports:
       - "8090:8080"
     depends_on:
