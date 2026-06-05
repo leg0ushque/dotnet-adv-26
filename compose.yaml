@@ -50,3 +50,20 @@ services:
     environment:
       RABBITMQ_DEFAULT_USER: user
       RABBITMQ_DEFAULT_PASS: password
+      
+  keycloak:
+    image: quay.io/keycloak/keycloak:26.6.0
+    container_name: keycloak
+    environment:
+      - KC_DB=mssql
+      - KC_DB_URL=jdbc:sqlserver://sqlserver:1433;databaseName=keycloakdb;trustServerCertificate=true
+      - KC_DB_USERNAME=sa
+      - KC_DB_PASSWORD=P4ss_W0rd
+      - KEYCLOAK_ADMIN=admin
+      - KEYCLOAK_ADMIN_PASSWORD=admin
+    ports:
+      - "8090:8080"
+    depends_on:
+      sqlserver:
+        condition: service_healthy
+    command: start
