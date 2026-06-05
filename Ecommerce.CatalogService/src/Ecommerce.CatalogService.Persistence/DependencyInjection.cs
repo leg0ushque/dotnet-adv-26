@@ -9,7 +9,6 @@ using Ecommerce.CatalogService.Persistence.Services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using RabbitMQ.Client;
 
 namespace Ecommerce.CatalogService.Persistence
 {
@@ -18,7 +17,8 @@ namespace Ecommerce.CatalogService.Persistence
         public static IServiceCollection AddPersistence(
             this IServiceCollection services, 
             IConfiguration configuration,
-            bool isTesting = false)
+            bool isTesting = false,
+            bool outboxServiceEnabled = false)
         {
             if (isTesting)
             {
@@ -45,7 +45,9 @@ namespace Ecommerce.CatalogService.Persistence
                 services.AddSingleton<RabbitMqConnectionFactory>();
                 services.AddSingleton<IMessagePublisher, RabbitMqPublisher>();
                 services.AddHostedService<RabbitMqTopologyInitializer>();
-                services.AddHostedService<OutboxProcessorBackgroundService>();
+
+                if(outboxServiceEnabled)
+                    services.AddHostedService<OutboxProcessorBackgroundService>();
             }
 
             services.AddScoped<IApplicationDbContext>(provider => 

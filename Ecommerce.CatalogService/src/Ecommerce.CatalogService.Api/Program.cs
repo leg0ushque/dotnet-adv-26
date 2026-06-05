@@ -17,7 +17,9 @@ namespace Ecommerce.CatalogService.Api
 
             var useInMemoryDatabase = builder.Configuration.GetValue<bool>("UseInMemoryDatabase", false);
 
-            builder.Services.AddPersistence(builder.Configuration, useInMemoryDatabase);
+            var outboxEnabled = Environment.GetEnvironmentVariable("OUTBOX_ENABLED") == "yes";
+
+            builder.Services.AddPersistence(builder.Configuration, useInMemoryDatabase, outboxEnabled);
             builder.Services.AddApplication();
 
             builder.Services.AddControllers();
