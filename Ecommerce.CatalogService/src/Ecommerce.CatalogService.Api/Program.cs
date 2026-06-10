@@ -1,11 +1,17 @@
 using Asp.Versioning;
 using Ecommerce.CatalogService.Api.Configuration;
-using Microsoft.EntityFrameworkCore;
-using Ecommerce.CatalogService.Persistence;
+using Ecommerce.CatalogService.Api.Constants;
+using Ecommerce.CatalogService.Api.Helpers;
 using Ecommerce.CatalogService.Application;
+using Ecommerce.CatalogService.Persistence;
 using Ecommerce.CatalogService.Persistence.Data;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
+using Microsoft.IdentityModel.Tokens;
 using Swashbuckle.AspNetCore.SwaggerGen;
+using System.Net.Http.Headers;
+using System.Security.Claims;
 
 namespace Ecommerce.CatalogService.Api
 {
@@ -21,6 +27,44 @@ namespace Ecommerce.CatalogService.Api
 
             builder.Services.AddPersistence(builder.Configuration, useInMemoryDatabase, outboxEnabled);
             builder.Services.AddApplication();
+
+            var authAuthority = builder.Configuration.GetValue<string>("Auth:Authority");
+            var authAudience = builder.Configuration.GetValue<string>("Auth:Audience");
+
+            builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+                .AddJwtBearer(options =>
+                {
+                    options.Authority = authAuthority;
+                    options.Audience = authAudience;
+                    options.RequireHttpsMetadata = false;
+                    options.TokenValidationParameters = new TokenValidationParameters
+                    {
+                        ValidateAudience = true,
+                        ValidateIssuer = true,
+                        ValidateLifetime = true,
+                        ValidateIssuerSigningKey = true,
+                        RoleClaimType = ClaimTypes.Role
+                    };
+
+                    options.Events = new JwtBearerEvents
+                    {
+                        OnTokenValidated = context =>
+                        {
+                            if (context.Principal?.Identity is ClaimsIdentity claimsIdentity)
+                            {
+                                KeycloakRoleHelper.MapKeycloakRolesToClaims(claimsIdentity);
+                            }
+
+                            return Task.CompletedTask;
+                        }
+                    };
+                });
+
+            builder.Services.AddAuthorization(options =>
+            {
+                options.AddPolicy(AuthConstants.ManagerOnlyPolicy, policy =>
+                    policy.RequireRole(AuthConstants.ManagerRole));
+            });
 
             builder.Services.AddControllers();
 
@@ -39,7 +83,33 @@ namespace Ecommerce.CatalogService.Api
             });
 
             builder.Services.AddTransient<IConfigureOptions<SwaggerGenOptions>, ConfigureSwaggerOptions>();
-            builder.Services.AddSwaggerGen();
+            builder.Services.AddSwaggerGen(options =>
+            {
+                options.AddSecurityDefinition("Bearer", new Microsoft.OpenApi.Models.OpenApiSecurityScheme
+                {
+                    Description = "JWT Authorization header using the Bearer scheme. Example: \"Authorization: Bearer {token}\"",
+                    Name = "Authorization",
+                    In = Microsoft.OpenApi.Models.ParameterLocation.Header,
+                    Type = Microsoft.OpenApi.Models.SecuritySchemeType.Http,
+                    Scheme = "bearer",
+                    BearerFormat = "JWT"
+                });
+
+                options.AddSecurityRequirement(new Microsoft.OpenApi.Models.OpenApiSecurityRequirement
+                {
+                    {
+                        new Microsoft.OpenApi.Models.OpenApiSecurityScheme
+                        {
+                            Reference = new Microsoft.OpenApi.Models.OpenApiReference
+                            {
+                                Type = Microsoft.OpenApi.Models.ReferenceType.SecurityScheme,
+                                Id = "Bearer"
+                            }
+                        },
+                        Array.Empty<string>()
+                    }
+                });
+            });
 
             var app = builder.Build();
 
@@ -67,6 +137,10 @@ namespace Ecommerce.CatalogService.Api
             }
 
             app.UseHttpsRedirection();
+
+            app.UseAuthentication();
+            app.UseAuthorization();
+
             app.MapControllers();
 
             app.Run();
