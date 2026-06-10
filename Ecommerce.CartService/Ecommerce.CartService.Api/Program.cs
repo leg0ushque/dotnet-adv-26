@@ -1,10 +1,15 @@
 using Asp.Versioning;
 using Asp.Versioning.ApiExplorer;
 using AutoMapper;
+using Ecommerce.CartService.Api.Helpers;
+using Ecommerce.CartService.Api.Middleware;
 using Ecommerce.CartService.BusinessLogic;
 using Ecommerce.CartService.BusinessLogic.Mappings;
 using Ecommerce.CartService.Messaging;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.Extensions.Logging.Abstractions;
+using System.Security.Claims;
+using static Ecommerce.CartService.Api.Constants;
 
 namespace Ecommerce.CartService.Api
 {
@@ -25,6 +30,45 @@ namespace Ecommerce.CartService.Api
             builder.Services.AddMessagingServices();
 
             builder.Services.AddSingleton(SetupMapper());
+
+            var authAuthority = builder.Configuration.GetValue<string>("Auth:Authority");
+            var authAudience = builder.Configuration.GetValue<string>("Auth:Audience");
+
+            builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+                .AddJwtBearer(options =>
+                {
+                    options.Authority = authAuthority;
+                    options.Audience = authAudience;
+                    options.RequireHttpsMetadata = false;
+                    options.TokenValidationParameters = new Microsoft.IdentityModel.Tokens.TokenValidationParameters
+                    {
+                        ValidateAudience = true,
+                        ValidateIssuer = true,
+                        ValidateLifetime = true,
+                        ValidateIssuerSigningKey = true,
+                        RoleClaimType = ClaimTypes.Role,
+                    };
+                    options.Events = new JwtBearerEvents
+                    {
+                        OnTokenValidated = context =>
+                        {
+                            if (context.Principal?.Identity is ClaimsIdentity claimsIdentity)
+                            {
+                                KeycloakRoleHelper.MapKeycloakRolesToClaims(claimsIdentity);
+                            }
+
+                            return Task.CompletedTask;
+                        }
+                    };
+                });
+
+            builder.Services.AddAuthorization(options =>
+            {
+                options.AddPolicy(AuthConstants.StoreCustomerManagerOnlyPolicy, policy =>
+                    policy.RequireRole(AuthConstants.ManagerRole, AuthConstants.StoreCustomerRole));
+            });
+
+            builder.Services.AddAuthorization();
 
             builder.Services.AddControllers();
 
@@ -73,6 +117,11 @@ namespace Ecommerce.CartService.Api
             });
 
             app.UseHttpsRedirection();
+
+            app.UseAuthentication();
+            app.UseAuthorization();
+
+            app.UseMiddleware<IdentityLoggingMiddleware>();
 
             app.MapControllers();
 
