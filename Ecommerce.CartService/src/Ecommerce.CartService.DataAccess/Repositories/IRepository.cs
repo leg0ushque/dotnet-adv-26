@@ -11,7 +11,7 @@ namespace Ecommerce.CartService.DataAccess.Repositories
     {
         public Task<string> CreateAsync(TEntity entity, CancellationToken cancellationToken = default);
 
-        Task<List<TEntity>> GetAllAsync(CancellationToken cancellationToken = default);
+        public Task<List<TEntity>> GetAllAsync(CancellationToken cancellationToken = default);
 
         Task<TEntity> GetByIdAsync(string id, CancellationToken cancellationToken = default);
 
