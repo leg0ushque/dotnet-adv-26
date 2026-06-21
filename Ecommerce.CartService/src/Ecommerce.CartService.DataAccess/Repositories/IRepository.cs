@@ -9,7 +9,7 @@ namespace Ecommerce.CartService.DataAccess.Repositories
 {
     public interface IRepository<TEntity>
     {
-        Task<string> CreateAsync(TEntity entity, CancellationToken cancellationToken = default);
+        public Task<string> CreateAsync(TEntity entity, CancellationToken cancellationToken = default);
 
         Task<List<TEntity>> GetAllAsync(CancellationToken cancellationToken = default);
 
