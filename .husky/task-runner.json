@@ -2,11 +2,17 @@
    "$schema": "https://alirezanet.github.io/Husky.Net/schema.json",
    "tasks": [
     {
+      "name": "verify-build",
+      "group": "pre-push",
+      "command": "dotnet",
+      "args": ["build", "-c", "Release"]
+    },
+    {
       "name": "verify-formatting",
       "group": "pre-push",
       "command": "dotnet",
-      "args": ["format", "--verify-no-changes"],
-      "include": ["**/*.cs"] 
+      "args": ["format", "--verify-no-changes", "--severity", "info"],
+      "include": ["**/*.cs"]
     }
   ]
 }
