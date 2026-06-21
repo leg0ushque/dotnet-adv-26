@@ -1,25 +1,37 @@
-﻿{
-  "$schema": "https://json.schemastore.org/launchsettings.json",
+{
   "profiles": {
-    "http": {
+    "http (+Outbox)": {
       "commandName": "Project",
-      "dotnetRunMessages": true,
       "launchBrowser": true,
       "launchUrl": "swagger",
-      "applicationUrl": "http://localhost:5183",
       "environmentVariables": {
-        "ASPNETCORE_ENVIRONMENT": "Development"
-      }
+        "ASPNETCORE_ENVIRONMENT": "Development",
+        "OUTBOX_ENABLED": "Yes"
+      },
+      "dotnetRunMessages": true,
+      "applicationUrl": "http://localhost:5183"
     },
-    "https": {
+    "http (-Outbox)": {
       "commandName": "Project",
-      "dotnetRunMessages": true,
       "launchBrowser": true,
       "launchUrl": "swagger",
-      "applicationUrl": "https://localhost:7038;http://localhost:5183",
       "environmentVariables": {
-        "ASPNETCORE_ENVIRONMENT": "Development"
-      }
+        "ASPNETCORE_ENVIRONMENT": "Development",
+        "OUTBOX_ENABLED": "No"
+      },
+      "dotnetRunMessages": true,
+      "applicationUrl": "http://localhost:5183"
     }
-  }
+  },
+  "https": {
+    "commandName": "Project",
+    "launchBrowser": true,
+    "launchUrl": "swagger",
+    "environmentVariables": {
+      "ASPNETCORE_ENVIRONMENT": "Development"
+    },
+    "dotnetRunMessages": true,
+    "applicationUrl": "https://localhost:7038;http://localhost:5183"
+  },
+  "$schema": "https://json.schemastore.org/launchsettings.json"
 }

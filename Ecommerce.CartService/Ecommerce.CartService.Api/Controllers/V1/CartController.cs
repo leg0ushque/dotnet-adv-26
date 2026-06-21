@@ -1,6 +1,7 @@
 using Asp.Versioning;
 using Ecommerce.CartService.BusinessLogic.Dtos;
 using Ecommerce.CartService.BusinessLogic.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Ecommerce.CartService.Api.Controllers.V1
@@ -12,6 +13,7 @@ namespace Ecommerce.CartService.Api.Controllers.V1
     [ApiVersion("1.0")]
     [ApiVersion("2.0")]
     [Route("api/v{version:apiVersion}/cart")]
+    [Authorize(Policy = Constants.AuthConstants.StoreCustomerManagerOnlyPolicy)]
     public class CartController : ControllerBase
     {
         private readonly ICartService _cartService;

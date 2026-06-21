@@ -1,8 +1,11 @@
 using Asp.Versioning;
+using Ecommerce.CatalogService.Api.Constants;
 using Ecommerce.CatalogService.Api.Models;
 using Ecommerce.CatalogService.Application.Categories.DTOs;
 using Ecommerce.CatalogService.Application.Categories.Interfaces;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 
 namespace Ecommerce.CatalogService.Api.Controllers.V1
 {
@@ -58,8 +61,11 @@ namespace Ecommerce.CatalogService.Api.Controllers.V1
         /// <param name="createDto">Category creation data</param>
         /// <returns>Created category ID</returns>
         [HttpPost]
+        [Authorize(Policy = AuthConstants.ManagerOnlyPolicy)]
         [ProducesResponseType(typeof(string), StatusCodes.Status201Created)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
         public async Task<ActionResult<string>> CreateCategory([FromBody] CreateCategoryDto createDto)
         {
             var result = await _categoryService.CreateAsync(createDto);
@@ -71,9 +77,12 @@ namespace Ecommerce.CatalogService.Api.Controllers.V1
         }
 
         [HttpPut("{id}")]
+        [Authorize(Policy = AuthConstants.ManagerOnlyPolicy)]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
         public async Task<IActionResult> UpdateCategory(string id, [FromBody] UpdateCategoryDto updateDto)
         {
             var result = await _categoryService.UpdateAsync(id, updateDto);
@@ -96,8 +105,11 @@ namespace Ecommerce.CatalogService.Api.Controllers.V1
         /// </summary>
         /// <param name="id">Category ID</param>
         [HttpDelete("{id}")]
+        [Authorize(Policy = AuthConstants.ManagerOnlyPolicy)]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
         public async Task<IActionResult> DeleteCategory(string id)
         {
             var result = await _categoryService.DeleteCategoryWithProductsAsync(id);

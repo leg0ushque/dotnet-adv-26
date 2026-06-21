@@ -1,0 +1,80 @@
+{
+  "realm": "Ecommerce",
+  "enabled": true,
+  "roles": {
+    "realm": [
+      { "name": "Manager" },
+      { "name": "Store customer" }
+    ]
+  },
+  "users": [
+    {
+      "username": "manager1",
+      "enabled": true,
+      "firstName": "Manager",
+      "lastName": "One",
+      "email": "manager1@example.com",
+      "emailVerified": true,
+      "credentials": [{ "type": "password", "value": "managerpass" }],
+      "realmRoles": ["Manager"]
+    },
+    {
+      "username": "customer1",
+      "enabled": true,
+      "firstName": "Customer",
+      "lastName": "One",
+      "email": "customer1@example.com",
+      "emailVerified": true,
+      "credentials": [{ "type": "password", "value": "customerpass" }],
+      "realmRoles": ["Store customer"]
+    }
+  ],
+  "clients": [
+    {
+      "clientId": "catalog-service",
+      "enabled": true,
+      "publicClient": false,
+      "secret": "catalog-secret",
+      "redirectUris": ["http://localhost:5000/*"],
+	  "directAccessGrantsEnabled": true,
+      "protocolMappers": [
+        {
+          "name": "Audience catalog-service",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-audience-mapper",
+          "consentRequired": false,
+          "config": {
+            "included.client.audience": "catalog-service",
+            "included.custom.audience": "",
+            "id.token.claim": "true",
+            "access.token.claim": "true",
+            "introspection.token.claim": "true"
+          }
+        }
+      ]
+    },
+    {
+      "clientId": "cart-service",
+      "enabled": true,
+      "publicClient": false,
+      "secret": "cart-secret",
+      "redirectUris": ["http://localhost:5001/*"],
+	  "directAccessGrantsEnabled": true,
+      "protocolMappers": [
+        {
+          "name": "Audience cart-service",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-audience-mapper",
+          "consentRequired": false,
+          "config": {
+            "included.client.audience": "cart-service",
+            "included.custom.audience": "",
+            "id.token.claim": "true",
+            "access.token.claim": "true",
+            "introspection.token.claim": "true"
+          }
+        }
+      ]
+    }
+  ]
+}

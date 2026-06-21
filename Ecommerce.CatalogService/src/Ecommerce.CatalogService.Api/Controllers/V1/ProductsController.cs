@@ -1,8 +1,10 @@
 using Asp.Versioning;
+using Ecommerce.CatalogService.Api.Constants;
 using Ecommerce.CatalogService.Api.Models;
 using Ecommerce.CatalogService.Application.Common.DTOs;
 using Ecommerce.CatalogService.Application.Products.DTOs;
 using Ecommerce.CatalogService.Application.Products.Interfaces;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Ecommerce.CatalogService.Api.Controllers.V1
@@ -71,8 +73,11 @@ namespace Ecommerce.CatalogService.Api.Controllers.V1
         /// <param name="createDto">Product creation data</param>
         /// <returns>Created product ID</returns>
         [HttpPost]
+        [Authorize(Policy = AuthConstants.ManagerOnlyPolicy)]
         [ProducesResponseType(typeof(string), StatusCodes.Status201Created)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
         public async Task<ActionResult<string>> CreateProduct([FromBody] CreateProductDto createDto)
         {
             var result = await _productService.CreateAsync(createDto);
@@ -84,9 +89,12 @@ namespace Ecommerce.CatalogService.Api.Controllers.V1
         }
 
         [HttpPut("{id}")]
+        [Authorize(Policy = AuthConstants.ManagerOnlyPolicy)]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
         public async Task<IActionResult> UpdateProduct(string id, [FromBody] UpdateProductDto updateDto)
         {
             var result = await _productService.UpdateAsync(id, updateDto);
@@ -105,8 +113,11 @@ namespace Ecommerce.CatalogService.Api.Controllers.V1
         }
 
         [HttpDelete("{id}")]
+        [Authorize(Policy = AuthConstants.ManagerOnlyPolicy)]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
         public async Task<IActionResult> DeleteProduct(string id)
         {
             var result = await _productService.DeleteAsync(id);

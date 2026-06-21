@@ -1,3 +1,79 @@
+# 07. Security. Auth
+
+### 1. What is the difference between authentication and authorization?
+
+Authentication is a process of verifying the identity of a user. Authorization is process of granting access to specific resources the user is _allowed_ to use after authentication.
+
+### 2. What authorization approaches can you list? What is role-based access control?
+
+- **Role-Based Access Control (RBAC)** - users are assigned roles (like admin, editor, viewer), and each role has permissions - a simple, scalable approach widely used in enterprises.
+- **Attribute-Based Access Control (ABAC)** - access is granted based on attributes (like department, location, time).
+- **Policy-Based Access Control** - uses policies to determine access, often seen in cloud environments.
+- **Discretionary Access Control (DAC)** - the resource owner decides who gets access (like Google Drive owner)
+- **Mandatory Access Control (MAC)** - access is dictated by system-enforced rules, common in government/military (like secret levels: top secret level, confidential level, etc)
+
+### 3. What exactly is Identity Management (Identity and Access Management)?
+
+IAM is a term for processes and technologies that manage digital identities and control access to resources. It covers:  
+* Identity management (creation, maintenance and deletion of user identities within organization)
+- Authentication (login)
+- Authorization (permissions & access conrol)
+- Auditing and compliance (tracking user activity and so on)
+
+### 4. What authentication/authorization protocols do you know? What is the difference between OAuth & OpenID?
+
+- SAML (Security Assertion Markup language) - used for SSO, especially in enterprise environments
+- Kerberos - used in Windows networks
+- LDAP - is for Directory-based authentication
+- OAuth 2.0 - delegates access, lets apps access resources on behalf of users without sharing passwords.
+- OpenID Connect - built on OAuth 2.0, adds authentication (verifies user identity and provides user info)
+
+### 5. What is Authentication/Authorization Token. What is JWT token? What other approaches except authentication/authorization, can we use with security token?
+
+A token is a digital credential issued after successful authentication, used to prove identity or permissions when accessing resources, so users don’t need to send their password with every request.   
+
+A JWT (JSON Web Token) is a compact, self-contained token format that encodes claims (like user info and permissions) in a signed, base64 encoded string, commonly used for stateless authentication.  
+
+Tokens can also be used for session management, password reset links, email verification, and protecting against CSRF attacks.
+
+The data payload nature of security tokens (specifically - JWTs) may be widely used:
+* security information exchange & state transfer (for non-sensitive data like preferences/cart id/etc)
+* CSRF protection (cross-site request forgery) - server embeds a token into the web form, so its match may be checked later
+* Proof of Integrity - for cases where data transit may corrupt the data
+* duplicate request prevention - in cases like "Pay now" button pressed twice the server checks and returns same result for the first request for all the duplicating ones
+
+### 6. What is Single Sign-On (SSO)? Name the steps to implement SSO. What are the benefits of SSO?
+
+SSO lets users log in once and access multiple applications without re-entering credentials.
+
+Steps to implement SSO are  
+1. Choose an SSO protocol (e.g., SAML, OpenID Connect).
+2. Set up an Identity Provider (IdP).
+3. Configure applications (Service Providers) to trust the IdP.
+4. Integrate and test the login flow.
+
+Benefits of SSO are
+- User experience simplification (one time login with access multiple applications)
+- Reduces password fatigue (decreased chance of forgetting or reusage of password)
+- Centralizes access control (admins can manage user access and permissions from a single point)
+- Improves security and compliance (easier to enforce security policies, monitor access, meet regulatory requirements)
+
+### 7. What is the difference between Two-Factor Authentication and Multi-Factor Authentication?
+
+Two-Factor Authentication (2FA) uses exactly two types of credentials (e.g., password + SMS code)   
+Multi-Factor Authentication (MFA) uses two or more credentials (e.g., password + SMS + fingerprint).
+
+### 8. Which of the OAuth flows can be used for user (customer) and which for client (server) authentication?
+
+OAuth flows are split into two categories based on whether a human user is involved. 
+
+For user (customer) authentication, where a person logs in and grants access to their data, the primary flows are the Authorization Code Flow and the Device Code Flow. The Authorization Code Flow is a standard for modern web and mobile applications where the user authenticates with the provider, and the app receives a code that gets exchanged for an token without exposing credentials.  
+The Device Code Flow (also called Device Authorization Flow) is specifically designed for input-constrained devices like smart TVs, game consoles, or IoT devices where typing is difficult, the user authenticates on a separate device (like their phone or computer) instead by entering a code shown on the main screen.  
+There's also the legacy Implicit Flow for older mobile apps, though it's now deprecated in favor of Authorization Code with PKCE.
+
+For client (server) authentication, where no human user is involved and the application itself needs to prove its identity, the Client Credentials Flow is used. This flow is for server-to-server or machine-to-machine communication, such as when your backend service calls another API, runs a background job, or accesses cloud resources. The client application authenticates itself using its own credentials (client ID and client secret) rather than a user's password, and it receives an access token that represents the application, not an individual user.
+
+---
 # 06. Message-based architecture
 
 ### 1. What is Message Based Architecture? What is the difference between Message Based Architecture and Event Based Architecture?
