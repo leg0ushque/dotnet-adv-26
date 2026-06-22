@@ -14,14 +14,9 @@ namespace Ecommerce.CartService.Api.Controllers.V1;
 [ApiVersion("2.0")]
 [Route("api/v{version:apiVersion}/cart")]
 [Authorize(Policy = Constants.AuthConstants.StoreCustomerManagerOnlyPolicy)]
-public class CartController : ControllerBase
+public class CartController(ICartService cartService) : ControllerBase
 {
-    private readonly ICartService _cartService;
-
-    public CartController(ICartService cartService)
-    {
-        _cartService = cartService;
-    }
+    private readonly ICartService _cartService = cartService;
 
     /// <summary>
     /// Get cart info by cart key (v1: returns cart model with items, v2: returns only items).

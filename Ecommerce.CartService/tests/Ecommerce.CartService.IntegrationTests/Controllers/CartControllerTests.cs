@@ -1,24 +1,19 @@
+using System.Collections.Generic;
+using System.Net;
+using System.Net.Http.Json;
+using System.Threading.Tasks;
 using AutoFixture;
 using Ecommerce.CartService.Api;
 using Ecommerce.CartService.BusinessLogic.Dtos;
 using FluentAssertions;
 using Microsoft.AspNetCore.Mvc.Testing;
-using System.Collections.Generic;
-using System.Net;
-using System.Net.Http.Json;
-using System.Threading.Tasks;
 using Xunit;
 
 namespace Ecommerce.CartService.IntegrationTests.Controllers;
 
-public class CartControllerTests : ControllerTestsBase
+public class CartControllerTests(WebApplicationFactory<Program> factory) : ControllerTestsBase(factory)
 {
-    private readonly Fixture _fixture;
-
-    public CartControllerTests(WebApplicationFactory<Program> factory) : base(factory)
-    {
-        _fixture = new Fixture();
-    }
+    private readonly Fixture _fixture = new();
 
     [Fact]
     public async Task GetCartV1_WhenCartExists_ReturnsCartDto()
