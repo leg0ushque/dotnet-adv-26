@@ -4,13 +4,8 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Ecommerce.CatalogService.Persistence.Data;
 
-public class EcommerceCatalogDbContext : DbContext, IApplicationDbContext
+public class EcommerceCatalogDbContext(DbContextOptions<EcommerceCatalogDbContext> options) : DbContext(options), IApplicationDbContext
 {
-    public EcommerceCatalogDbContext(DbContextOptions<EcommerceCatalogDbContext> options)
-        : base(options)
-    {
-    }
-
     public DbSet<Category> Categories { get; set; } = null!;
 
     public DbSet<Product> Products { get; set; } = null!;

@@ -6,7 +6,7 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace Ecommerce.CatalogService.IntegrationTests.Fixtures;
 
-public class DatabaseFixture : IDisposable
+public class DatabaseFixture
 {
     public EcommerceCatalogDbContext Context { get; private set; }
     public IServiceProvider Services { get; private set; }
@@ -31,12 +31,6 @@ public class DatabaseFixture : IDisposable
 
         Context = Services.GetRequiredService<EcommerceCatalogDbContext>();
         Context.Database.EnsureCreated();
-    }
-
-    public void Dispose()
-    {
-        Context.Database.EnsureDeleted();
-        Context.Dispose();
     }
 
     public void ClearDatabase()

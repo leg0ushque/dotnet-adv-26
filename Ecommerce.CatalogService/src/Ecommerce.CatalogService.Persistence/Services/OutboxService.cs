@@ -58,7 +58,7 @@ public class OutboxService(
             }
         }
 
-        if (pendingMessages.Any())
+        if (pendingMessages.Count != default)
         {
             await _context.SaveChangesAsync(cancellationToken);
         }

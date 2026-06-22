@@ -1,3 +1,5 @@
+using System.Globalization;
+using System.Text.Json;
 using AutoMapper;
 using Ecommerce.CatalogService.Application.Common.Interfaces;
 using Ecommerce.CatalogService.Application.Products.DTOs;
@@ -5,6 +7,8 @@ using Ecommerce.CatalogService.Application.Products.Services;
 using Ecommerce.CatalogService.Domain.Entities;
 using FluentAssertions;
 using FluentValidation;
+using Microsoft.Extensions.Options;
+using Microsoft.VisualBasic.FileIO;
 using Moq;
 
 namespace Ecommerce.CatalogService.UnitTests.Products;
@@ -28,13 +32,21 @@ public class ProductServiceTests
         _mockTransactionManager = new Mock<ITransactionManager>();
         _mockOutboxService = new Mock<IOutboxService>();
 
+        var mockOptions = new Mock<IOptions<JsonSerializerOptions>>();
+        mockOptions.Setup(o => o.Value).Returns(new JsonSerializerOptions
+        {
+            PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+            WriteIndented = false,
+        });
+
         _productService = new ProductService(
             _mockRepository.Object,
             _mockCreateValidator.Object,
             _mockUpdateValidator.Object,
             _mockMapper.Object,
             _mockTransactionManager.Object,
-            _mockOutboxService.Object);
+            _mockOutboxService.Object,
+            mockOptions.Object);
     }
 
     [Fact]
@@ -102,7 +114,7 @@ public class ProductServiceTests
         var products = new List<Product>();
         for (int i = 1; i <= 25; i++)
         {
-            products.Add(new Product(i.ToString(), $"Product {i}", "cat1", 10.0m * i, i));
+            products.Add(new Product(i.ToString(CultureInfo.InvariantCulture), $"Product {i}", "cat1", 10.0m * i, i));
         }
 
         var productDtos = products.Select(p => new ProductDto

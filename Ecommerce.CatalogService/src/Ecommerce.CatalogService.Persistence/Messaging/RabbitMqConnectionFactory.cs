@@ -41,7 +41,8 @@ public class RabbitMqConnectionFactory(IOptions<RabbitMqOptions> options)
                 NetworkRecoveryInterval = TimeSpan.FromSeconds(_options.NetworkRecoveryIntervalSeconds)
             };
 
-            return await factory.CreateConnectionAsync(cancellationToken: cancellationToken);
+            _connection = await factory.CreateConnectionAsync(cancellationToken: cancellationToken);
+            return _connection;
         }
         finally
         {

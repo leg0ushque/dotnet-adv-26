@@ -16,11 +16,11 @@ public abstract class BaseService<TEntity, TDto, TCreateDto, TUpdateDto>(
         where TUpdateDto : class
         where TDto : class
 {
-    protected readonly IRepository<TEntity> _repository = repository;
-    protected readonly IValidator<TCreateDto> _createValidator = createValidator;
-    protected readonly IValidator<TUpdateDto> _updateValidator = updateValidator;
-    protected readonly IMapper _mapper = mapper;
-    protected readonly ITransactionManager _transactionManager = transactionManager;
+    protected private readonly IRepository<TEntity> _repository = repository;
+    protected private readonly IValidator<TCreateDto> _createValidator = createValidator;
+    protected private readonly IValidator<TUpdateDto> _updateValidator = updateValidator;
+    protected private readonly IMapper _mapper = mapper;
+    protected private readonly ITransactionManager _transactionManager = transactionManager;
 
     protected abstract string EntityName { get; }
 
@@ -32,7 +32,7 @@ public abstract class BaseService<TEntity, TDto, TCreateDto, TUpdateDto>(
 
         if (entity == null)
         {
-            return Result.Failure<TDto>(Error.NotFound(EntityName, id));
+            return Result.Failure<TDto>(ErrorResult.NotFound(EntityName, id));
         }
 
         return Result.Success(_mapper.Map<TDto>(entity));
@@ -53,7 +53,7 @@ public abstract class BaseService<TEntity, TDto, TCreateDto, TUpdateDto>(
         {
             var errors = string.Join("; ", validationResult.Errors.Select(e => e.ErrorMessage));
 
-            return Result.Failure<string>(Error.Validation("Validation.Failed", errors));
+            return Result.Failure<string>(ErrorResult.Validation("Validation.Failed", errors));
         }
 
         var entity = _mapper.Map<TEntity>(dto);
@@ -70,7 +70,7 @@ public abstract class BaseService<TEntity, TDto, TCreateDto, TUpdateDto>(
 
         if (entity == null)
         {
-            return Result.Failure(Error.NotFound(EntityName, id));
+            return Result.Failure(ErrorResult.NotFound(EntityName, id));
         }
 
         var validationResult = await _updateValidator.ValidateAsync(dto);
@@ -78,7 +78,7 @@ public abstract class BaseService<TEntity, TDto, TCreateDto, TUpdateDto>(
         if (!validationResult.IsValid)
         {
             var errors = string.Join("; ", validationResult.Errors.Select(e => e.ErrorMessage));
-            return Result.Failure(Error.Validation("Validation.Failed", errors));
+            return Result.Failure(ErrorResult.Validation("Validation.Failed", errors));
         }
 
         UpdateEntityDetails(entity, dto);
@@ -95,7 +95,7 @@ public abstract class BaseService<TEntity, TDto, TCreateDto, TUpdateDto>(
 
         if (entity == null)
         {
-            return Result.Failure(Error.NotFound(EntityName, id));
+            return Result.Failure(ErrorResult.NotFound(EntityName, id));
         }
 
         await _repository.DeleteByIdAsync(id);

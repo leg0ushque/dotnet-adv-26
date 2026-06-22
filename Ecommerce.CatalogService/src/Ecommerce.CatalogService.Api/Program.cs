@@ -1,5 +1,5 @@
-using System.Net.Http.Headers;
 using System.Security.Claims;
+using System.Text.Json;
 using Asp.Versioning;
 using Ecommerce.CatalogService.Api.Configuration;
 using Ecommerce.CatalogService.Api.Constants;
@@ -11,6 +11,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
+using Microsoft.OpenApi;
 using Swashbuckle.AspNetCore.SwaggerGen;
 
 namespace Ecommerce.CatalogService.Api;
@@ -21,7 +22,13 @@ public class Program
     {
         var builder = WebApplication.CreateBuilder(args);
 
-        var useInMemoryDatabase = builder.Configuration.GetValue<bool>("UseInMemoryDatabase", false);
+        builder.Services.Configure<JsonSerializerOptions>(options =>
+        {
+            options.PropertyNamingPolicy = JsonNamingPolicy.CamelCase;
+            options.WriteIndented = false;
+        });
+
+        var useInMemoryDatabase = builder.Configuration.GetValue("UseInMemoryDatabase", false);
 
         var outboxEnabled = Environment.GetEnvironmentVariable("OUTBOX_ENABLED") == "yes";
 
@@ -60,11 +67,9 @@ public class Program
                 };
             });
 
-        builder.Services.AddAuthorization(options =>
-        {
-            options.AddPolicy(AuthConstants.ManagerOnlyPolicy, policy =>
+        builder.Services.AddAuthorizationBuilder()
+            .AddPolicy(AuthConstants.ManagerOnlyPolicy, policy =>
                 policy.RequireRole(AuthConstants.ManagerRole));
-        });
 
         builder.Services.AddControllers();
 
@@ -85,29 +90,19 @@ public class Program
         builder.Services.AddTransient<IConfigureOptions<SwaggerGenOptions>, ConfigureSwaggerOptions>();
         builder.Services.AddSwaggerGen(options =>
         {
-            options.AddSecurityDefinition("Bearer", new Microsoft.OpenApi.Models.OpenApiSecurityScheme
+            options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
             {
                 Description = "JWT Authorization header using the Bearer scheme. Example: \"Authorization: Bearer {token}\"",
                 Name = "Authorization",
-                In = Microsoft.OpenApi.Models.ParameterLocation.Header,
-                Type = Microsoft.OpenApi.Models.SecuritySchemeType.Http,
-                Scheme = "bearer",
+                In = ParameterLocation.Header,
+                Type = SecuritySchemeType.Http,
+                Scheme = "Bearer", // Usually "Bearer" is preferred (case-insensitive in some systems, but best to match standard)
                 BearerFormat = "JWT"
             });
 
-            options.AddSecurityRequirement(new Microsoft.OpenApi.Models.OpenApiSecurityRequirement
+            options.AddSecurityRequirement(document => new OpenApiSecurityRequirement
             {
-                {
-                    new Microsoft.OpenApi.Models.OpenApiSecurityScheme
-                    {
-                        Reference = new Microsoft.OpenApi.Models.OpenApiReference
-                        {
-                            Type = Microsoft.OpenApi.Models.ReferenceType.SecurityScheme,
-                            Id = "Bearer"
-                        }
-                    },
-                    Array.Empty<string>()
-                }
+                { new OpenApiSecuritySchemeReference("Bearer", document), new() }
             });
         });
 

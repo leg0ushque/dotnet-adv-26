@@ -34,7 +34,7 @@ public class CategoryService(IRepository<Category> categoryRepository,
 
         if (category == null)
         {
-            return Result.Failure(Error.NotFound(EntityName, id));
+            return Result.Failure(ErrorResult.NotFound(EntityName, id));
         }
 
         try

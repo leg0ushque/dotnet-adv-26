@@ -8,14 +8,9 @@ using FluentAssertions;
 
 namespace Ecommerce.CatalogService.IntegrationTests.Products;
 
-public class ProductsApiIntegrationTests : IClassFixture<CatalogWebApplicationFactory>
+public class ProductsApiIntegrationTests(CatalogWebApplicationFactory factory) : IClassFixture<CatalogWebApplicationFactory>
 {
-    private readonly HttpClient _client;
-
-    public ProductsApiIntegrationTests(CatalogWebApplicationFactory factory)
-    {
-        _client = factory.CreateClient();
-    }
+    private readonly HttpClient _client = factory.CreateClient();
 
     [Fact]
     public async Task CreateProduct_ReturnsCreatedProduct()

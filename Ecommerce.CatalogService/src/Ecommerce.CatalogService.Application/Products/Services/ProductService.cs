@@ -11,6 +11,7 @@ using Ecommerce.CatalogService.Application.Products.Interfaces;
 using Ecommerce.CatalogService.Domain;
 using Ecommerce.CatalogService.Domain.Entities;
 using FluentValidation;
+using Microsoft.Extensions.Options;
 
 namespace Ecommerce.CatalogService.Application.Products.Services;
 
@@ -19,7 +20,8 @@ public class ProductService(IRepository<Product> productRepository,
     IValidator<UpdateProductDto> updateValidator,
     IMapper mapper,
     ITransactionManager transactionManager,
-    IOutboxService outboxService)
+    IOutboxService outboxService,
+    IOptions<JsonSerializerOptions> jsonSerializerOptions)
     : BaseService<Product, ProductDto, CreateProductDto, UpdateProductDto>(
         productRepository,
         createValidator,
@@ -28,6 +30,7 @@ public class ProductService(IRepository<Product> productRepository,
         transactionManager), IProductService
 {
     private readonly IOutboxService _outboxService = outboxService;
+    private readonly JsonSerializerOptions _jsonSerializerOptions = jsonSerializerOptions.Value;
 
     protected override string EntityName => "Product";
 
@@ -46,7 +49,7 @@ public class ProductService(IRepository<Product> productRepository,
 
         if (product == null)
         {
-            return Result.Failure(Error.NotFound(EntityName, id));
+            return Result.Failure(ErrorResult.NotFound(EntityName, id));
         }
 
         var validationResult = await _updateValidator.ValidateAsync(dto);
@@ -54,7 +57,7 @@ public class ProductService(IRepository<Product> productRepository,
         if (!validationResult.IsValid)
         {
             var errors = string.Join("; ", validationResult.Errors.Select(e => e.ErrorMessage));
-            return Result.Failure(Error.Validation("Validation.Failed", errors));
+            return Result.Failure(ErrorResult.Validation("Validation.Failed", errors));
         }
 
         try
@@ -96,14 +99,8 @@ public class ProductService(IRepository<Product> productRepository,
 
     private Task CreateOutboxMessageAsync(UpdatedProductMessage dto)
     {
-        var options = new JsonSerializerOptions
-        {
-            PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-            WriteIndented = false
-        };
-
         return _outboxService.AddOutboxMessageAsync(
-            JsonSerializer.Serialize(dto, options),
+            JsonSerializer.Serialize(dto, _jsonSerializerOptions),
             Constants.CatalogEventTypes.ProductUpdated);
     }
 }
