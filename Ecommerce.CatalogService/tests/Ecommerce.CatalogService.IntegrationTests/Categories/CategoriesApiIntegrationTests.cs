@@ -7,14 +7,9 @@ using FluentAssertions;
 
 namespace Ecommerce.CatalogService.IntegrationTests.Categories;
 
-public class CategoriesApiIntegrationTests : IClassFixture<CatalogWebApplicationFactory>
+public class CategoriesApiIntegrationTests(CatalogWebApplicationFactory factory) : IClassFixture<CatalogWebApplicationFactory>
 {
-    private readonly HttpClient _client;
-
-    public CategoriesApiIntegrationTests(CatalogWebApplicationFactory factory)
-    {
-        _client = factory.CreateClient();
-    }
+    private readonly HttpClient _client = factory.CreateClient();
 
     [Fact]
     public async Task CreateCategory_ReturnsCreatedCategory()
