@@ -1,10 +1,9 @@
-﻿namespace Ecommerce.CatalogService.Api.Constants
+﻿namespace Ecommerce.CatalogService.Api.Constants;
+
+public static class AuthConstants
 {
-    public static class AuthConstants
-    {
-        public const string RealmAccess = "realm_access";
-        public const string Roles = "roles";
-        public const string ManagerRole = "Manager";
-        public const string ManagerOnlyPolicy = "ManagerOnly";
-    }
+    public const string RealmAccess = "realm_access";
+    public const string Roles = "roles";
+    public const string ManagerRole = "Manager";
+    public const string ManagerOnlyPolicy = "ManagerOnly";
 }

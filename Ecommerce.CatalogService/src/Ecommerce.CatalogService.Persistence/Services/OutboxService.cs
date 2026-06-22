@@ -4,69 +4,68 @@ using Ecommerce.CatalogService.Persistence.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
-namespace Ecommerce.CatalogService.Persistence.Services
+namespace Ecommerce.CatalogService.Persistence.Services;
+
+public class OutboxService(
+    EcommerceCatalogDbContext context,
+    IMessagePublisher messagePublisher,
+    ILogger<OutboxService> logger) : IOutboxService
 {
-    public class OutboxService(
-        EcommerceCatalogDbContext context,
-        IMessagePublisher messagePublisher,
-        ILogger<OutboxService> logger) : IOutboxService
+    public const int MaxRetryCount = 5;
+    public const int MessagesBatchSize = 5;
+
+    private readonly EcommerceCatalogDbContext _context = context;
+    private readonly IMessagePublisher _messagePublisher = messagePublisher;
+    private readonly ILogger<OutboxService> _logger = logger;
+
+    public async Task AddOutboxMessageAsync(string payload, string eventType)
     {
-        public const int MaxRetryCount = 5;
-        public const int MessagesBatchSize = 5;
+        var outboxMessage = new OutboxMessage(eventType, payload);
+        await _context.OutboxMessages.AddAsync(outboxMessage);
+    }
 
-        private readonly EcommerceCatalogDbContext _context = context;
-        private readonly IMessagePublisher _messagePublisher = messagePublisher;
-        private readonly ILogger<OutboxService> _logger = logger;
+    public async Task ProcessPendingMessagesAsync(CancellationToken cancellationToken)
+    {
+        var pendingMessages = await _context.OutboxMessages
+            .Where(m => !m.IsProcessed && m.RetryCount < MaxRetryCount)
+            .OrderBy(m => m.CreatedAt)
+            .Take(MessagesBatchSize)
+            .ToListAsync(cancellationToken);
 
-        public async Task AddOutboxMessageAsync(string payload, string eventType)
+        foreach (var message in pendingMessages)
         {
-            var outboxMessage = new OutboxMessage(eventType, payload);
-            await _context.OutboxMessages.AddAsync(outboxMessage);
-        }
-
-        public async Task ProcessPendingMessagesAsync(CancellationToken cancellationToken)
-        {
-            var pendingMessages = await _context.OutboxMessages
-                .Where(m => !m.IsProcessed && m.RetryCount < MaxRetryCount)
-                .OrderBy(m => m.CreatedAt)
-                .Take(MessagesBatchSize)
-                .ToListAsync(cancellationToken);
-
-            foreach (var message in pendingMessages)
+            try
             {
-                try
-                {
-                    await PublishMessageAsync(message, cancellationToken);
+                await PublishMessageAsync(message, cancellationToken);
 
-                    message.MarkAsProcessed();
+                message.MarkAsProcessed();
 
-                    _logger.LogInformation(
-                        "Successfully processed outbox message {MessageId} of type {MessageType}", 
-                        message.Id, 
-                        message.Type);
-                }
-                catch (Exception ex)
-                {
-                    message.IncrementRetryCount(ex.Message);
-
-                    _logger.LogError(
-                        ex, 
-                        "Failed to process outbox message {MessageId} of type {MessageType}. Retry count: {RetryCount}", 
-                        message.Id, 
-                        message.Type, 
-                        message.RetryCount);
-                }
+                _logger.LogInformation(
+                    "Successfully processed outbox message {MessageId} of type {MessageType}",
+                    message.Id,
+                    message.Type);
             }
-
-            if (pendingMessages.Any())
+            catch (Exception ex)
             {
-                await _context.SaveChangesAsync(cancellationToken);
+                message.IncrementRetryCount(ex.Message);
+
+                _logger.LogError(
+                    ex,
+                    "Failed to process outbox message {MessageId} of type {MessageType}. Retry count: {RetryCount}",
+                    message.Id,
+                    message.Type,
+                    message.RetryCount);
             }
         }
 
-        private async Task PublishMessageAsync(OutboxMessage message, CancellationToken cancellationToken = default)
+        if (pendingMessages.Any())
         {
-            await _messagePublisher.PublishAsync(message.Payload, message.Type, cancellationToken);
+            await _context.SaveChangesAsync(cancellationToken);
         }
+    }
+
+    private async Task PublishMessageAsync(OutboxMessage message, CancellationToken cancellationToken = default)
+    {
+        await _messagePublisher.PublishAsync(message.Payload, message.Type, cancellationToken);
     }
 }

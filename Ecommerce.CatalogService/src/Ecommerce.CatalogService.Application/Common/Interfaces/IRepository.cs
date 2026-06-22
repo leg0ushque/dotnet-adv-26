@@ -1,14 +1,13 @@
 using System.Linq.Expressions;
 
-namespace Ecommerce.CatalogService.Application.Common.Interfaces
+namespace Ecommerce.CatalogService.Application.Common.Interfaces;
+
+public interface IRepository<TEntity> where TEntity : class
 {
-    public interface IRepository<TEntity> where TEntity : class
-    {
-        Task<string> CreateAsync(TEntity item);
-        Task DeleteByIdAsync(string id);
-        Task<List<TEntity>> GetAllAsync(Expression<Func<TEntity, bool>>? filter = null);
-        Task<TEntity?> GetSingleAsync(Expression<Func<TEntity, bool>> filter);
-        Task<TEntity?> GetByIdAsync(string id);
-        Task UpdateAsync(TEntity item);
-    }
+    public Task<string> CreateAsync(TEntity item);
+    public Task DeleteByIdAsync(string id);
+    public Task<List<TEntity>> GetAllAsync(Expression<Func<TEntity, bool>>? filter = null);
+    public Task<TEntity?> GetSingleAsync(Expression<Func<TEntity, bool>> filter);
+    public Task<TEntity?> GetByIdAsync(string id);
+    public Task UpdateAsync(TEntity item);
 }

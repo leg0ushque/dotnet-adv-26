@@ -1,9 +1,8 @@
 ﻿using System.Collections.Generic;
 
-namespace Ecommerce.CartService.DataAccess.Entities
+namespace Ecommerce.CartService.DataAccess.Entities;
+
+public class Cart : BaseEntity
 {
-    public class Cart : BaseEntity
-    {
-        public List<CartItem> Items { get; set; } = [];
-    }
+    public List<CartItem> Items { get; set; } = [];
 }

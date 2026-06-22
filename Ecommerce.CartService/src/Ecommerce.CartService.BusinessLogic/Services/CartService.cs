@@ -7,93 +7,98 @@ using Ecommerce.CartService.DataAccess.Repositories;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace Ecommerce.CartService.BusinessLogic.Services
+namespace Ecommerce.CartService.BusinessLogic.Services;
+
+public class CartService(
+    IRepository<Cart> repository,
+    ICreateValidator<CartDto> createCartValidator,
+    IUpdateValidator<CartDto> updateCartValidator,
+    ICreateValidator<CartItemDto> createCartItemValidator,
+    IMapper mapper) : BaseService<Cart, CartDto>(repository, createCartValidator, updateCartValidator, mapper), ICartService
 {
-    public class CartService(
-        IRepository<Cart> repository,
-        ICreateValidator<CartDto> createCartValidator,
-        IUpdateValidator<CartDto> updateCartValidator,
-        ICreateValidator<CartItemDto> createCartItemValidator,
-        IMapper mapper) : BaseService<Cart, CartDto>(repository, createCartValidator, updateCartValidator, mapper), ICartService
+    private readonly ICreateValidator<CartItemDto> _createCartItemValidator = createCartItemValidator;
+
+    protected override string EntityName => "Cart";
+
+    public async Task<Result> AddItemToCartAsync(string cartKey, CartItemDto item)
     {
-        private readonly ICreateValidator<CartItemDto> _createCartItemValidator = createCartItemValidator;
+        var cart = await _repository.GetByIdAsync(cartKey);
 
-        protected override string EntityName => "Cart";
-
-        public async Task<Result> AddItemToCartAsync(string cartKey, CartItemDto item)
+        if (cart == null)
         {
-            var cart = await _repository.GetByIdAsync(cartKey);
+            var validationResult = await _createCartItemValidator.ValidateAsync(item);
 
-            if (cart == null)
+            if (!validationResult.IsValid)
             {
-                var validationResult = await _createCartItemValidator.ValidateAsync(item);
-
-                if (!validationResult.IsValid)
-                {
-                    var errors = string.Join("; ", validationResult.Errors.Select(e => e.ErrorMessage));
-                    return Result.Failure(Error.Validation("Validation.Failed", errors));
-                }
-
-                cart = new Cart
-                {
-                    Id = cartKey,
-                    Items = [ _mapper.Map<CartItem>(item) ]
-                };
-
-                await _repository.CreateAsync(cart);
-
-                return Result.Success();
+                var errors = string.Join("; ", validationResult.Errors.Select(e => e.ErrorMessage));
+                return Result.Failure(ErrorResult.Validation("Validation.Failed", errors));
             }
 
-            var existingItem = cart.Items.SingleOrDefault(i => i.ItemId == item.ItemId);
-
-            if (existingItem != null)
+            cart = new Cart
             {
-                return Result.Failure(Error.Validation("Cart.ItemExists", $"Item with id '{item.ItemId}' already exists in cart."));
-            }
+                Id = cartKey,
+                Items = [ _mapper.Map<CartItem>(item) ]
+            };
 
-            var itemValidationResult = await _createCartItemValidator.ValidateAsync(item);
-            if (!itemValidationResult.IsValid)
-            {
-                var errors = string.Join("; ", itemValidationResult.Errors.Select(e => e.ErrorMessage));
-
-                return Result.Failure(Error.Validation("Validation.Failed", errors));
-            }
-
-            cart.Items.Add(_mapper.Map<CartItem>(item));
-
-            await _repository.UpdateAsync(cartKey, c => c.Items, cart.Items);
+            await _repository.CreateAsync(cart);
 
             return Result.Success();
         }
 
-        public async Task<Result> DeleteItemFromCartAsync(string cartKey, string itemId)
+        var existingItem = cart.Items.SingleOrDefault(i => i.ItemId == item.ItemId);
+
+        if (existingItem != null)
         {
-            var cart = await _repository.GetByIdAsync(cartKey);
-
-            if (cart == null)
-                return Result.Failure(Error.NotFound("Cart", cartKey));
-
-            var existingItem = cart.Items.SingleOrDefault(i => i.ItemId == itemId);
-
-            if (existingItem == null)
-                return Result.Failure(Error.NotFound("CartItem", itemId.ToString()));
-
-            cart.Items.Remove(existingItem);
-
-            await _repository.UpdateAsync(cartKey, c => c.Items, cart.Items);
-
-            return Result.Success();
+            return Result.Failure(ErrorResult.Validation("Cart.ItemExists", $"Item with id '{item.ItemId}' already exists in cart."));
         }
 
-        public async Task<Result<CartDto>> GetCartByKeyAsync(string cartKey)
+        var itemValidationResult = await _createCartItemValidator.ValidateAsync(item);
+        if (!itemValidationResult.IsValid)
         {
-            var cart = await _repository.GetByIdAsync(cartKey);
+            var errors = string.Join("; ", itemValidationResult.Errors.Select(e => e.ErrorMessage));
 
-            if (cart == null)
-                return Result.Failure<CartDto>(Error.NotFound("Cart", cartKey));
-
-            return Result.Success(_mapper.Map<CartDto>(cart));
+            return Result.Failure(ErrorResult.Validation("Validation.Failed", errors));
         }
+
+        cart.Items.Add(_mapper.Map<CartItem>(item));
+
+        await _repository.UpdateAsync(cartKey, c => c.Items, cart.Items);
+
+        return Result.Success();
+    }
+
+    public async Task<Result> DeleteItemFromCartAsync(string cartKey, string itemId)
+    {
+        var cart = await _repository.GetByIdAsync(cartKey);
+
+        if (cart == null)
+        {
+            return Result.Failure(ErrorResult.NotFound("Cart", cartKey));
+        }
+
+        var existingItem = cart.Items.SingleOrDefault(i => i.ItemId == itemId);
+
+        if (existingItem == null)
+        {
+            return Result.Failure(ErrorResult.NotFound("CartItem", itemId.ToString()));
+        }
+
+        cart.Items.Remove(existingItem);
+
+        await _repository.UpdateAsync(cartKey, c => c.Items, cart.Items);
+
+        return Result.Success();
+    }
+
+    public async Task<Result<CartDto>> GetCartByKeyAsync(string cartKey)
+    {
+        var cart = await _repository.GetByIdAsync(cartKey);
+
+        if (cart == null)
+        {
+            return Result.Failure<CartDto>(ErrorResult.NotFound("Cart", cartKey));
+        }
+
+        return Result.Success(_mapper.Map<CartDto>(cart));
     }
 }

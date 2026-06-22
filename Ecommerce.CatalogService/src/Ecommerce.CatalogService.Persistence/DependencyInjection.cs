@@ -10,64 +10,65 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace Ecommerce.CatalogService.Persistence
+namespace Ecommerce.CatalogService.Persistence;
+
+public static class DependencyInjection
 {
-    public static class DependencyInjection
+    public static IServiceCollection AddPersistence(
+        this IServiceCollection services,
+        IConfiguration configuration,
+        bool isTesting = false,
+        bool outboxServiceEnabled = false)
     {
-        public static IServiceCollection AddPersistence(
-            this IServiceCollection services, 
-            IConfiguration configuration,
-            bool isTesting = false,
-            bool outboxServiceEnabled = false)
+        if (isTesting)
         {
-            if (isTesting)
+            services.AddDbContext<EcommerceCatalogDbContext>(options =>
             {
-                services.AddDbContext<EcommerceCatalogDbContext>(options =>
-                {
-                    options.UseInMemoryDatabase("TestDatabase");
-                    options.EnableServiceProviderCaching(false);
-                });
+                options.UseInMemoryDatabase("TestDatabase");
+                options.EnableServiceProviderCaching(false);
+            });
 
-                services.AddSingleton<IMessagePublisher, FakeMessagePublisher>();
-            }
-            else
-            {
-                var connectionString = configuration.GetConnectionString("DefaultConnection");
-
-                services.AddDbContext<EcommerceCatalogDbContext>(options =>
-                    options.UseSqlServer(
-                        connectionString,
-                        b => b.MigrationsAssembly(typeof(EcommerceCatalogDbContext).Assembly.FullName)));
-
-                // RabbitMQ
-
-                services.RegisterOptions<RabbitMqOptions>(RabbitMqOptions.SectionName);
-                services.AddSingleton<RabbitMqConnectionFactory>();
-                services.AddSingleton<IMessagePublisher, RabbitMqPublisher>();
-                services.AddHostedService<RabbitMqTopologyInitializer>();
-
-                if(outboxServiceEnabled)
-                    services.AddHostedService<OutboxProcessorBackgroundService>();
-            }
-
-            services.AddScoped<IApplicationDbContext>(provider => 
-                provider.GetRequiredService<EcommerceCatalogDbContext>());
-
-            services.AddScoped(typeof(IRepository<>), typeof(GenericRepository<>));
-
-            services.AddScoped<ITransactionManager, CatalogTransactionManager>();
-			
-            services.AddScoped<IOutboxService, OutboxService>();
-
-            return services;
+            services.AddSingleton<IMessagePublisher, FakeMessagePublisher>();
         }
+        else
+        {
+            var connectionString = configuration.GetConnectionString("DefaultConnection");
+
+            services.AddDbContext<EcommerceCatalogDbContext>(options =>
+                options.UseSqlServer(
+                    connectionString,
+                    b => b.MigrationsAssembly(typeof(EcommerceCatalogDbContext).Assembly.FullName)));
+
+            // RabbitMQ
+
+            services.RegisterOptions<RabbitMqOptions>(RabbitMqOptions.SectionName);
+            services.AddSingleton<RabbitMqConnectionFactory>();
+            services.AddSingleton<IMessagePublisher, RabbitMqPublisher>();
+            services.AddHostedService<RabbitMqTopologyInitializer>();
+
+            if (outboxServiceEnabled)
+            {
+                services.AddHostedService<OutboxProcessorBackgroundService>();
+            }
+        }
+
+        services.AddScoped<IApplicationDbContext>(provider =>
+            provider.GetRequiredService<EcommerceCatalogDbContext>());
+
+        services.AddScoped(typeof(IRepository<>), typeof(GenericRepository<>));
+
+        services.AddScoped<ITransactionManager, CatalogTransactionManager>();
+
+        services.AddScoped<IOutboxService, OutboxService>();
+
+        return services;
     }
+}
 
-    internal sealed class FakeMessagePublisher : IMessagePublisher
+internal sealed class FakeMessagePublisher : IMessagePublisher
+{
+    public Task PublishAsync(string serializedBody, string eventTypeName, CancellationToken cancellationToken = default)
     {
-        public Task PublishAsync(string serializedBody, string eventTypeName, CancellationToken cancellationToken = default)
-        {
-            return Task.CompletedTask;
-        }
+        return Task.CompletedTask;
     }
 }

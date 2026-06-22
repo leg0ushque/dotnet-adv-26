@@ -11,3 +11,7 @@ dotnet_separate_import_directive_groups = true:warning
 csharp_style_namespace_declarations = file_scoped:warning
 csharp_prefer_braces = true:warning
 dotnet_style_require_accessibility_modifiers = always:warning
+
+# CA1707: Identifiers should not contain underscores - ignore for unit tests
+[{*Test.cs,*Tests.cs}]
+dotnet_diagnostic.CA1707.severity = none

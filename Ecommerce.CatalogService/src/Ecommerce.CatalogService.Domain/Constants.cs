@@ -1,18 +1,17 @@
-﻿namespace Ecommerce.CatalogService.Domain
+﻿namespace Ecommerce.CatalogService.Domain;
+
+public static class Constants
 {
-    public static class Constants
+    public const int MaxCategoryNameLength = 50;
+
+    public const decimal MinProductPrice = default;
+
+    public const int MinProductAmount = default;
+
+    public const int DefaultMessageRetryCount = 0;
+
+    public class CatalogEventTypes
     {
-        public const int MaxCategoryNameLength = 50;
-
-        public const decimal MinProductPrice = default;
-
-        public const int MinProductAmount = default;
-
-        public const int DefaultMessageRetryCount = 0;
-
-        public class CatalogEventTypes
-        {
-            public const string ProductUpdated = "ProductUpdated";
-        }
+        public const string ProductUpdated = "ProductUpdated";
     }
 }

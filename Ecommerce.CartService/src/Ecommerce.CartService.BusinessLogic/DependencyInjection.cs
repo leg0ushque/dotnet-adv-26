@@ -4,22 +4,20 @@ using Ecommerce.CartService.BusinessLogic.Validators;
 using Ecommerce.CartService.DataAccess;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace Ecommerce.CartService.BusinessLogic
+namespace Ecommerce.CartService.BusinessLogic;
+
+public static class DependencyInjection
 {
-    public static class DependencyInjection
+    public static IServiceCollection AddBusinessLogicServices(this IServiceCollection services, string connectionString, string databaseName)
     {
-        public static IServiceCollection AddBusinessLogicServices(this IServiceCollection services, string connectionString, string databaseName)
-        {
-            services.AddScoped<ICartService, Services.CartService>();
+        services.AddScoped<ICartService, Services.CartService>();
 
-            services.AddScoped<ICreateValidator<CartDto>, CartDtoCreateValidator>();
-            services.AddScoped<IUpdateValidator<CartDto>, CartDtoUpdateValidator>();
-            services.AddScoped<ICreateValidator<CartItemDto>, CartItemDtoValidator>();
+        services.AddScoped<ICreateValidator<CartDto>, CartDtoCreateValidator>();
+        services.AddScoped<IUpdateValidator<CartDto>, CartDtoUpdateValidator>();
+        services.AddScoped<ICreateValidator<CartItemDto>, CartItemDtoValidator>();
 
-            services.AddDataAccessServices(connectionString, databaseName);
+        services.AddDataAccessServices(connectionString, databaseName);
 
-            return services;
-        }
+        return services;
     }
-
 }

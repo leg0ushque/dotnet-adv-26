@@ -3,25 +3,24 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
 using Microsoft.Extensions.Configuration;
 
-namespace Ecommerce.CatalogService.Persistence.Factories
+namespace Ecommerce.CatalogService.Persistence.Factories;
+
+public class EcommerceCatalogDbContextFactory : IDesignTimeDbContextFactory<EcommerceCatalogDbContext>
 {
-    public class EcommerceCatalogDbContextFactory : IDesignTimeDbContextFactory<EcommerceCatalogDbContext>
+    public EcommerceCatalogDbContext CreateDbContext(string[] args)
     {
-        public EcommerceCatalogDbContext CreateDbContext(string[] args)
-        {
-            var assemblyPath = Path.Combine(Directory.GetCurrentDirectory(), "..\\Ecommerce.CatalogService.Api");
+        var assemblyPath = Path.Combine(Directory.GetCurrentDirectory(), "..\\Ecommerce.CatalogService.Api");
 
-            IConfigurationRoot configuration = new ConfigurationBuilder()
-                .SetBasePath(assemblyPath)
-                .AddJsonFile("appsettings.json")
-                .Build();
+        IConfigurationRoot configuration = new ConfigurationBuilder()
+            .SetBasePath(assemblyPath)
+            .AddJsonFile("appsettings.json")
+            .Build();
 
-            var connectionString = configuration.GetConnectionString("DefaultConnection");
+        var connectionString = configuration.GetConnectionString("DefaultConnection");
 
-            var optionsBuilder = new DbContextOptionsBuilder<EcommerceCatalogDbContext>();
-            optionsBuilder.UseSqlServer(connectionString);
+        var optionsBuilder = new DbContextOptionsBuilder<EcommerceCatalogDbContext>();
+        optionsBuilder.UseSqlServer(connectionString);
 
-            return new EcommerceCatalogDbContext(optionsBuilder.Options);
-        }
+        return new EcommerceCatalogDbContext(optionsBuilder.Options);
     }
 }

@@ -1,7 +1,6 @@
-﻿namespace Ecommerce.CartService.DataAccess.Entities
+﻿namespace Ecommerce.CartService.DataAccess.Entities;
+
+public interface IEntity
 {
-    public interface IEntity
-    {
-        public string Id { get; set; }
-    }
+    public string Id { get; set; }
 }

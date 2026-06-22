@@ -7,74 +7,73 @@ using System.Linq.Expressions;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace Ecommerce.CartService.DataAccess.Repositories
+namespace Ecommerce.CartService.DataAccess.Repositories;
+
+public abstract class GenericMongoRepository<TEntity> : IRepository<TEntity>
+    where TEntity : class, IEntity
 {
-    public abstract class GenericMongoRepository<TEntity> : IRepository<TEntity>
-        where TEntity : class, IEntity
+    protected abstract string CollectionName { get; }
+
+    protected private readonly IMongoCollection<TEntity> _collection;
+
+    protected GenericMongoRepository(IMongoDbFactory mongoDbFactory)
     {
-        protected abstract string CollectionName { get; }
+        _collection = mongoDbFactory.GetCollection<TEntity>(CollectionName);
+    }
 
-        protected readonly IMongoCollection<TEntity> _collection;
+    public async Task<string> CreateAsync(TEntity entity, CancellationToken cancellationToken = default)
+    {
+        await _collection.InsertOneAsync(entity, new InsertOneOptions(), cancellationToken);
 
-        protected GenericMongoRepository(IMongoDbFactory mongoDbFactory)
-        {
-            _collection = mongoDbFactory.GetCollection<TEntity>(CollectionName);
-        }
+        return entity.Id;
+    }
+    public async Task<List<TEntity>> GetAllAsync(CancellationToken cancellationToken = default)
+    {
+        var items = await _collection.FindAsync(_ => true,
+            cancellationToken: cancellationToken);
 
-        public async Task<string> CreateAsync(TEntity entity, CancellationToken cancellationToken = default)
-        {
-            await _collection.InsertOneAsync(entity, new InsertOneOptions(), cancellationToken);
+        return await items.ToListAsync(cancellationToken);
+    }
 
-            return entity.Id;
-        }
-        public async Task<List<TEntity>> GetAllAsync(CancellationToken cancellationToken = default)
-        {
-            var items = await _collection.FindAsync(_ => true,
-                cancellationToken: cancellationToken);
+    public async Task<TEntity> GetByIdAsync(string id, CancellationToken cancellationToken = default)
+    {
+        var item = await _collection.FindAsync(Builders<TEntity>.Filter.Eq("_id", id),
+            cancellationToken: cancellationToken);
 
-            return await items.ToListAsync(cancellationToken);
-        }
+        return await item.FirstOrDefaultAsync(cancellationToken);
+    }
 
-        public async Task<TEntity> GetByIdAsync(string id, CancellationToken cancellationToken = default)
-        {
-            var item = await _collection.FindAsync(Builders<TEntity>.Filter.Eq("_id", id),
-                cancellationToken: cancellationToken);
+    public async Task<List<TEntity>> FilterAsync(Expression<Func<TEntity, bool>> expression, CancellationToken cancellationToken = default)
+    {
+        var items = await _collection.FindAsync(Builders<TEntity>.Filter.Where(expression),
+            cancellationToken: cancellationToken);
 
-            return await item.FirstOrDefaultAsync(cancellationToken);
-        }
+        return await items.ToListAsync(cancellationToken);
+    }
 
-        public async Task<List<TEntity>> FilterAsync(Expression<Func<TEntity, bool>> expression, CancellationToken cancellationToken = default)
-        {
-            var items = await _collection.FindAsync(Builders<TEntity>.Filter.Where(expression),
-                cancellationToken: cancellationToken);
+    public async Task<List<TEntity>> FilterAsync<TField>(Expression<Func<TEntity, TField>> field, IEnumerable<TField> values, CancellationToken cancellationToken = default)
+    {
+        var items = await _collection.FindAsync(Builders<TEntity>.Filter.In(field, values),
+            cancellationToken: cancellationToken);
 
-            return await items.ToListAsync(cancellationToken);
-        }
+        return await items.ToListAsync(cancellationToken);
+    }
 
-        public async Task<List<TEntity>> FilterAsync<TField>(Expression<Func<TEntity, TField>> field, IEnumerable<TField> values, CancellationToken cancellationToken = default)
-        {
-            var items = await _collection.FindAsync(Builders<TEntity>.Filter.In(field, values),
-                cancellationToken: cancellationToken);
+    public Task UpdateAsync(string id, TEntity entity, CancellationToken cancellationToken = default)
+    {
+        return _collection.ReplaceOneAsync(Builders<TEntity>.Filter.Eq("_id", id), entity,
+            cancellationToken: cancellationToken);
+    }
 
-            return await items.ToListAsync(cancellationToken);
-        }
+    public Task UpdateAsync<TField>(string id, Expression<Func<TEntity, TField>> field, TField newValue, CancellationToken cancellationToken = default)
+    {
+        return _collection.FindOneAndUpdateAsync(Builders<TEntity>.Filter.Eq("_id", id),
+                Builders<TEntity>.Update.Set(field, newValue),
+            cancellationToken: cancellationToken);
+    }
 
-        public Task UpdateAsync(string id, TEntity entity, CancellationToken cancellationToken = default)
-        {
-            return _collection.ReplaceOneAsync(Builders<TEntity>.Filter.Eq("_id", id), entity,
-                cancellationToken: cancellationToken);
-        }
-
-        public Task UpdateAsync<TField>(string id, Expression<Func<TEntity, TField>> field, TField newValue, CancellationToken cancellationToken = default)
-        {
-            return _collection.FindOneAndUpdateAsync(Builders<TEntity>.Filter.Eq("_id", id),
-                    Builders<TEntity>.Update.Set(field, newValue),
-                cancellationToken: cancellationToken);
-        }
-
-        public Task DeleteAsync(string id, CancellationToken cancellationToken = default)
-        {
-            return _collection.DeleteOneAsync(Builders<TEntity>.Filter.Eq("_id", id), cancellationToken);
-        }
+    public Task DeleteAsync(string id, CancellationToken cancellationToken = default)
+    {
+        return _collection.DeleteOneAsync(Builders<TEntity>.Filter.Eq("_id", id), cancellationToken);
     }
 }

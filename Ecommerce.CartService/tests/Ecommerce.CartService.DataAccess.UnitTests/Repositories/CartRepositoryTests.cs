@@ -2,11 +2,10 @@
 using Ecommerce.CartService.DataAccess.Factories;
 using Ecommerce.CartService.DataAccess.Repositories;
 
-namespace Ecommerce.CartService.DataAccess.UnitTests.Repositories
+namespace Ecommerce.CartService.DataAccess.UnitTests.Repositories;
+
+public class CartRepositoryTests : GenericMongoRepositoryTestsBase<Cart>
 {
-    public class CartRepositoryTests : GenericMongoRepositoryTestsBase<Cart>
-    {
-        public override IRepository<Cart> CreateRepository(IMongoDbFactory factory)
-            => new CartRepository(factory);
-    }
+    public override IRepository<Cart> CreateRepository(IMongoDbFactory factory)
+        => new CartRepository(factory);
 }

@@ -1,12 +1,11 @@
-﻿namespace Ecommerce.CartService.DataAccess.Entities
-{
-    /// <summary>
-    /// Inline model for entities
-    /// </summary>
-    public class Image
-    {
-        public string? ImageUrl { get; set; }
+﻿namespace Ecommerce.CartService.DataAccess.Entities;
 
-        public string? ImageAltText { get; set; }
-    }
+/// <summary>
+/// Inline model for entities
+/// </summary>
+public class Image
+{
+    public string? ImageUrl { get; set; }
+
+    public string? ImageAltText { get; set; }
 }

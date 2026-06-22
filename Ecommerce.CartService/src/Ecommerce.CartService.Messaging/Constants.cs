@@ -1,10 +1,9 @@
-﻿namespace Ecommerce.CartService.Messaging
+﻿namespace Ecommerce.CartService.Messaging;
+
+public static class Constants
 {
-    public static class Constants
+    public static class CatalogEventTypes
     {
-        public static class CatalogEventTypes
-        {
-            public const string ProductUpdated = "ProductUpdated";
-        }
+        public const string ProductUpdated = "ProductUpdated";
     }
 }

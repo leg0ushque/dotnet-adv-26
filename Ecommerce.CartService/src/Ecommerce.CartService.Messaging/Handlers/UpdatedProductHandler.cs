@@ -2,59 +2,58 @@ using Ecommerce.CartService.DataAccess.Repositories;
 using Ecommerce.CartService.Messaging.Models;
 using Microsoft.Extensions.Logging;
 
-namespace Ecommerce.CartService.Messaging.Handlers
+namespace Ecommerce.CartService.Messaging.Handlers;
+
+public class UpdatedProductHandler : IMessageHandler<UpdatedProductMessage>
 {
-    public class UpdatedProductHandler : IMessageHandler<UpdatedProductMessage>
+    private readonly IRepository<DataAccess.Entities.Cart> _cartRepository;
+    private readonly ILogger<UpdatedProductHandler> _logger;
+
+    public UpdatedProductHandler(
+        IRepository<DataAccess.Entities.Cart> cartRepository,
+        ILogger<UpdatedProductHandler> logger)
     {
-        private readonly IRepository<DataAccess.Entities.Cart> _cartRepository;
-        private readonly ILogger<UpdatedProductHandler> _logger;
+        _cartRepository = cartRepository;
+        _logger = logger;
+    }
 
-        public UpdatedProductHandler(
-            IRepository<DataAccess.Entities.Cart> cartRepository,
-            ILogger<UpdatedProductHandler> logger)
+    public async Task HandleAsync(UpdatedProductMessage messageBody, CancellationToken cancellationToken = default)
+    {
+        _logger.LogInformation("Handling product {ProductId} update", messageBody.Id);
+
+        var cartsWithItem = await _cartRepository.FilterAsync(
+            c => c.Items.Any(i => i.ItemId == messageBody.Id),
+            cancellationToken);
+
+        foreach (var cart in cartsWithItem)
         {
-            _cartRepository = cartRepository;
-            _logger = logger;
-        }
+            var itemsToUpdate = cart.Items.Where(i => i.ItemId == messageBody.Id).ToList();
 
-        public async Task HandleAsync(UpdatedProductMessage messageBody, CancellationToken cancellationToken = default)
-        {
-            _logger.LogInformation("Handling product {ProductId} update", messageBody.Id);
-
-            var cartsWithItem = await _cartRepository.FilterAsync(
-                c => c.Items.Any(i => i.ItemId == messageBody.Id),
-                cancellationToken);
-
-            foreach (var cart in cartsWithItem)
+            foreach (var item in itemsToUpdate)
             {
-                var itemsToUpdate = cart.Items.Where(i => i.ItemId == messageBody.Id).ToList();
-
-                foreach (var item in itemsToUpdate)
+                if(!string.IsNullOrEmpty(messageBody.Name))
                 {
-                    if(!string.IsNullOrEmpty(messageBody.Name))
-                    {
-                        item.Name = messageBody.Name;
-                    }
-
-                    if (messageBody.Price.HasValue)
-                    {
-                        item.Price = messageBody.Price;
-                    }
+                    item.Name = messageBody.Name;
                 }
 
-                await _cartRepository.UpdateAsync(cart.Id, c => c.Items, cart.Items, cancellationToken);
-
-                _logger.LogInformation(
-                    "Updated {Count} items in cart {CartId} for catalog item {ItemId}",
-                    itemsToUpdate.Count,
-                    cart.Id,
-                    messageBody.Id);
+                if (messageBody.Price.HasValue)
+                {
+                    item.Price = messageBody.Price;
+                }
             }
 
+            await _cartRepository.UpdateAsync(cart.Id, c => c.Items, cart.Items, cancellationToken);
+
             _logger.LogInformation(
-                "Processed updated product {ProductId}. Updated {CartCount} carts",
-                messageBody.Id,
-                cartsWithItem.Count);
+                "Updated {Count} items in cart {CartId} for catalog item {ItemId}",
+                itemsToUpdate.Count,
+                cart.Id,
+                messageBody.Id);
         }
+
+        _logger.LogInformation(
+            "Processed updated product {ProductId}. Updated {CartCount} carts",
+            messageBody.Id,
+            cartsWithItem.Count);
     }
 }

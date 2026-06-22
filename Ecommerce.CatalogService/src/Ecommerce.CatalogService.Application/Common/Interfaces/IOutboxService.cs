@@ -1,9 +1,8 @@
-namespace Ecommerce.CatalogService.Application.Common.Interfaces
-{
-    public interface IOutboxService
-    {
-        Task AddOutboxMessageAsync(string payload, string eventType);
+namespace Ecommerce.CatalogService.Application.Common.Interfaces;
 
-        Task ProcessPendingMessagesAsync(CancellationToken cancellationToken);
-    }
+public interface IOutboxService
+{
+    public Task AddOutboxMessageAsync(string payload, string eventType);
+
+    public Task ProcessPendingMessagesAsync(CancellationToken cancellationToken);
 }

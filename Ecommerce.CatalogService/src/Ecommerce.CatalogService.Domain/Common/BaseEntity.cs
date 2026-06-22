@@ -1,7 +1,6 @@
-﻿namespace Ecommerce.CatalogService.Domain.Common
+﻿namespace Ecommerce.CatalogService.Domain.Common;
+
+public abstract class BaseEntity
 {
-    public abstract class BaseEntity
-    {
-        public string Id { get; set; } = string.Empty;
-    }
+    public string Id { get; set; } = string.Empty;
 }
