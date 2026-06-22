@@ -1,11 +1,11 @@
-﻿using AutoMapper;
+﻿using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
+using AutoMapper;
 using Ecommerce.CartService.BusinessLogic.Dtos;
 using Ecommerce.CartService.BusinessLogic.Results;
 using Ecommerce.CartService.BusinessLogic.Validators;
 using Ecommerce.CartService.DataAccess.Repositories;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 
 namespace Ecommerce.CartService.BusinessLogic.Services;
 

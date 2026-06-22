@@ -25,7 +25,7 @@ public class UpdatedProductHandler(
 
             foreach (var item in itemsToUpdate)
             {
-                if(!string.IsNullOrEmpty(messageBody.Name))
+                if (!string.IsNullOrEmpty(messageBody.Name))
                 {
                     item.Name = messageBody.Name;
                 }

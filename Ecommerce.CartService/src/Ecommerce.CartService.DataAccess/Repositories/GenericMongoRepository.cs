@@ -1,11 +1,11 @@
-﻿using Ecommerce.CartService.DataAccess.Entities;
-using Ecommerce.CartService.DataAccess.Factories;
-using MongoDB.Driver;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq.Expressions;
 using System.Threading;
 using System.Threading.Tasks;
+using Ecommerce.CartService.DataAccess.Entities;
+using Ecommerce.CartService.DataAccess.Factories;
+using MongoDB.Driver;
 
 namespace Ecommerce.CartService.DataAccess.Repositories;
 

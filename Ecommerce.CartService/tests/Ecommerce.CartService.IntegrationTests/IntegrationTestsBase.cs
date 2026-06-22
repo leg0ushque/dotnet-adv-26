@@ -1,4 +1,7 @@
-﻿using AutoFixture;
+﻿using System.Collections.Generic;
+using System.Threading;
+using System.Threading.Tasks;
+using AutoFixture;
 using AutoMapper;
 using Ecommerce.CartService.BusinessLogic.Dtos;
 using Ecommerce.CartService.BusinessLogic.Mappings;
@@ -9,9 +12,6 @@ using Ecommerce.CartService.DataAccess.Repositories;
 using FluentAssertions;
 using FluentValidation;
 using Microsoft.Extensions.Logging.Abstractions;
-using System.Collections.Generic;
-using System.Threading;
-using System.Threading.Tasks;
 using Xunit;
 
 namespace Ecommerce.CartService.IntegrationTests;
@@ -40,7 +40,7 @@ public abstract class IntegrationTestsBase<TEntity, TDto, TCreateValidator, TUpd
 
         EntitiesIds = [];
 
-        _mappingService = new MapperConfiguration(cfg => 
+        _mappingService = new MapperConfiguration(cfg =>
             cfg.AddProfile(new ApplicationMappingProfile()), NullLoggerFactory.Instance)
             .CreateMapper();
 

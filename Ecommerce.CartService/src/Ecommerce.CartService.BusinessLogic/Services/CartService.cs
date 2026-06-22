@@ -37,7 +37,7 @@ public class CartService(
             cart = new Cart
             {
                 Id = cartKey,
-                Items = [ _mapper.Map<CartItem>(item) ]
+                Items = [_mapper.Map<CartItem>(item)]
             };
 
             await _repository.CreateAsync(cart);

@@ -1,8 +1,8 @@
-﻿using Ecommerce.CartService.DataAccess.Entities;
+﻿using System.IO;
+using Ecommerce.CartService.DataAccess.Entities;
 using Ecommerce.CartService.DataAccess.Factories;
 using Ecommerce.CartService.DataAccess.Repositories;
 using Microsoft.Extensions.Configuration;
-using System.IO;
 
 namespace Ecommerce.CartService.IntegrationTests;
 

@@ -1,7 +1,7 @@
-﻿using Ecommerce.CartService.BusinessLogic.Dtos;
+﻿using System.Threading.Tasks;
+using Ecommerce.CartService.BusinessLogic.Dtos;
 using Ecommerce.CartService.BusinessLogic.Results;
 using Ecommerce.CartService.DataAccess.Entities;
-using System.Threading.Tasks;
 
 namespace Ecommerce.CartService.BusinessLogic.Services;
 

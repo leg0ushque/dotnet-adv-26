@@ -36,7 +36,7 @@ public class RabbitMqTopologyInitializer(
                 autoDelete: false,
                 cancellationToken: cancellationToken);
 
-            var productUpdatedRoutingKey = _options.RoutingKeyPrefix + 
+            var productUpdatedRoutingKey = _options.RoutingKeyPrefix +
                 Constants.CatalogEventTypes.ProductUpdated.ToLowerInvariant();
 
             await channel.QueueBindAsync(

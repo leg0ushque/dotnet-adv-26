@@ -1,6 +1,6 @@
-﻿using Ecommerce.CartService.BusinessLogic.Results;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Threading.Tasks;
+using Ecommerce.CartService.BusinessLogic.Results;
 
 namespace Ecommerce.CartService.BusinessLogic.Services;
 

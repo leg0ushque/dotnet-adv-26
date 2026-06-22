@@ -3,7 +3,7 @@ namespace Ecommerce.CartService.BusinessLogic.Dtos;
 /// <summary>
 /// Inline model for DTOs
 /// </summary>
-public class CartItemDto 
+public class CartItemDto
 {
     public required string ItemId { get; set; }
 

@@ -1,8 +1,8 @@
-using Ecommerce.CartService.Api;
-using Microsoft.AspNetCore.Mvc.Testing;
 using System.Net.Http;
 using System.Net.Http.Json;
 using System.Threading.Tasks;
+using Ecommerce.CartService.Api;
+using Microsoft.AspNetCore.Mvc.Testing;
 using Xunit;
 
 namespace Ecommerce.CartService.IntegrationTests.Controllers;

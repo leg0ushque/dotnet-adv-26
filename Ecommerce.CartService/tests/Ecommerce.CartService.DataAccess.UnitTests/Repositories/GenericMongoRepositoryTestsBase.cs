@@ -1,15 +1,15 @@
-﻿using AutoFixture;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
+using AutoFixture;
 using Ecommerce.CartService.DataAccess.Entities;
 using Ecommerce.CartService.DataAccess.Factories;
 using Ecommerce.CartService.DataAccess.Repositories;
 using FluentAssertions;
 using MongoDB.Driver;
 using Moq;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
 using Xunit;
 
 namespace Ecommerce.CartService.DataAccess.UnitTests.Repositories;

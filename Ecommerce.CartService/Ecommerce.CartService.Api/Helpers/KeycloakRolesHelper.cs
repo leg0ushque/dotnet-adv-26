@@ -1,5 +1,5 @@
-﻿using Newtonsoft.Json.Linq;
-using System.Security.Claims;
+﻿using System.Security.Claims;
+using Newtonsoft.Json.Linq;
 
 namespace Ecommerce.CartService.Api.Helpers;
 

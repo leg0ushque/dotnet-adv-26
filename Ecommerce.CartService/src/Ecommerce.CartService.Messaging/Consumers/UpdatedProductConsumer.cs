@@ -1,3 +1,5 @@
+using System.Text;
+using System.Text.Json;
 using Ecommerce.CartService.Messaging.Configuration;
 using Ecommerce.CartService.Messaging.Handlers;
 using Ecommerce.CartService.Messaging.Infrastructure;
@@ -7,8 +9,6 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
-using System.Text;
-using System.Text.Json;
 
 namespace Ecommerce.CartService.Messaging.Consumers;
 
@@ -32,7 +32,7 @@ public class UpdatedProductConsumer(
     {
         _cancellationToken = stoppingToken;
 
-        _logger.LogInformation("Updated Product Consumer started. Listening for {EventType} events only.", 
+        _logger.LogInformation("Updated Product Consumer started. Listening for {EventType} events only.",
             Constants.CatalogEventTypes.ProductUpdated);
 
         var connection = await _connectionFactory.GetConnectionAsync(stoppingToken);
@@ -90,14 +90,14 @@ public class UpdatedProductConsumer(
             var routingKey = ea.RoutingKey;
 
             _logger.LogInformation(
-                "Received message. EventType: {EventType}, RoutingKey: {RoutingKey}", 
-                eventType, 
+                "Received message. EventType: {EventType}, RoutingKey: {RoutingKey}",
+                eventType,
                 routingKey);
 
             if (eventType != Constants.CatalogEventTypes.ProductUpdated)
             {
-                _logger.LogWarning("Unexpected event type: {EventType}. Expected: {ExpectedType}. Ignoring message.", 
-                    eventType, 
+                _logger.LogWarning("Unexpected event type: {EventType}. Expected: {ExpectedType}. Ignoring message.",
+                    eventType,
                     Constants.CatalogEventTypes.ProductUpdated);
 
                 await _channel.BasicAckAsync(deliveryTag: deliveryTag, multiple: false, cancellationToken: _cancellationToken);
