@@ -4,18 +4,12 @@ using Microsoft.Extensions.Logging;
 
 namespace Ecommerce.CartService.Messaging.Handlers;
 
-public class UpdatedProductHandler : IMessageHandler<UpdatedProductMessage>
+public class UpdatedProductHandler(
+    IRepository<DataAccess.Entities.Cart> cartRepository,
+    ILogger<UpdatedProductHandler> logger) : IMessageHandler<UpdatedProductMessage>
 {
-    private readonly IRepository<DataAccess.Entities.Cart> _cartRepository;
-    private readonly ILogger<UpdatedProductHandler> _logger;
-
-    public UpdatedProductHandler(
-        IRepository<DataAccess.Entities.Cart> cartRepository,
-        ILogger<UpdatedProductHandler> logger)
-    {
-        _cartRepository = cartRepository;
-        _logger = logger;
-    }
+    private readonly IRepository<DataAccess.Entities.Cart> _cartRepository = cartRepository;
+    private readonly ILogger<UpdatedProductHandler> _logger = logger;
 
     public async Task HandleAsync(UpdatedProductMessage messageBody, CancellationToken cancellationToken = default)
     {

@@ -5,5 +5,5 @@ namespace Ecommerce.CartService.BusinessLogic.Dtos;
 public class CartDto : BaseDto
 {
 
-    public List<CartItemDto> Items { get; set; } = new();
+    public List<CartItemDto> Items { get; set; } = [];
 }
