@@ -2,17 +2,30 @@
    "$schema": "https://alirezanet.github.io/Husky.Net/schema.json",
    "tasks": [
     {
-      "name": "verify-build",
+      "name": "build-cart-service",
       "group": "pre-push",
       "command": "dotnet",
-      "args": ["build", "-c", "Release"]
+      "args": ["build", "Ecommerce.CartService/Ecommerce.CartService.slnx", "-c", "Release"]
     },
     {
-      "name": "verify-formatting",
+      "name": "build-catalog-service",
       "group": "pre-push",
       "command": "dotnet",
-      "args": ["format", "--verify-no-changes", "--severity", "info"],
-      "include": ["**/*.cs"]
+      "args": ["build", "Ecommerce.CatalogService/Ecommerce.CatalogService.slnx", "-c", "Release"]
+    },
+    {
+      "name": "format-cart-service",
+      "group": "pre-push",
+      "command": "dotnet",
+      "args": ["format", "Ecommerce.CartService/Ecommerce.CartService.slnx", "--verify-no-changes", "--severity", "info"],
+      "include": ["Ecommerce.CartService/**/*.cs"]
+    },
+    {
+      "name": "format-catalog-service",
+      "group": "pre-push",
+      "command": "dotnet",
+      "args": ["format", "Ecommerce.CatalogService/Ecommerce.CatalogService.slnx", "--verify-no-changes", "--severity", "info"],
+      "include": ["Ecommerce.CatalogService/**/*.cs"]
     }
   ]
 }
