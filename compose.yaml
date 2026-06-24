@@ -84,7 +84,8 @@ services:
     command: start 
 
   sql-init-sonarqube:
-    profiles: ["sonar"] 
+    profiles:
+      - sonar
     image: mcr.microsoft.com/mssql-tools
     depends_on:
       sqlserver:
@@ -110,7 +111,8 @@ services:
            END"
           
   sonarqube:
-    profiles: ["sonar"] 
+    profiles:
+      - sonar
     image: sonarqube:community
     container_name: sonarqube
     depends_on:

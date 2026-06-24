@@ -360,9 +360,9 @@ docker compose --profile sonar up -d
 
 Then open  **[http://localhost:9000](http://localhost:9000/)** and login as admin/admin. Change password if required, remember about 12 symbols and other requirements.
 
-To run analisys it's required to generate a token at **My Account → Security → Generate Token** (with option Global Analisys). Paste the token into both config files:
-    - `sonar/sonar-cart.json`
-    - `sonar/sonar-catalog.json`
+To run analisys it's required to generate a token at **My Account → Security → Generate Token** (with option Global Analisys). Paste the token into both config files:  
+* `sonar/sonar-cart.json`
+* `sonar/sonar-catalog.json`
 
 #### Run Analysis
 
@@ -380,7 +380,7 @@ Results will be available at `http://localhost:9000/projects`
 After the analisys done and results are gathered, please, stop SonarQube as it uses min ~2.5GB of RAM, which is not really effective for development & debugging.
 
 ```powershell
-docker compose --profile sonar stop
+docker compose stop sonarqube sql-init-sonarqube
 ```
 
 ####  Known Issues & Fixes
