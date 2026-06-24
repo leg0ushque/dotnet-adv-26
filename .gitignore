@@ -484,3 +484,7 @@ $RECYCLE.BIN/
 appsettings.json
 Ecommerce.CartService/Ecommerce.CartService.Api/settings.json
 Ecommerce.CartService/tests/Ecommerce.CartService.IntegrationTests/settings.json
+
+/.sonarqube
+sonar/sonar-cart.json
+sonar/sonar-catalog.json
