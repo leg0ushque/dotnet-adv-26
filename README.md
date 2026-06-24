@@ -40,6 +40,9 @@ docker-compose up -d
     - Open-source identity and access management  
     - Accessible at **[http://localhost:8090](http://localhost:8090/)**  
 
+7. SonarQube Analysis
+    -  Code quality analysis & metrics  
+    - Accessible at **[http://localhost:9000](http://localhost:9000/)**  
 ---
 # Security. Auth
 
@@ -333,5 +336,86 @@ dotnet ef database update -c EcommerceCatalogDbContext --project src\Ecommerce.C
 
 ## Testing
 
-The solution includes both Unit and Integration tests demonstrating testability.
+The solution includes both Unit and Integration tests demonstrating testability. Make sure Keycloak is running because some projects' API controllers will require authentication during test runs.
 
+# SonarQube Analysis
+
+#### Prerequisites:  
+
+1) Install sonarscanner dotnet tool using  
+```powershell
+dotnet tool install --global dotnet-sonarscanner
+```
+
+2) Make sure sonarqube DB exists in SQL server (go to Adminer **[http://localhost:8082](http://localhost:8082/)** and check). Run `docker-compose up -d sql-init-sonarqube` if no database exists.
+
+#### Startup
+
+You can run SonarQube locally using
+```powershell
+docker compose --profile sonar up -d
+```
+
+"Sonar" profile allows to manipulate only sonar-related containers.
+
+Then open  **[http://localhost:9000](http://localhost:9000/)** and login as admin/admin. Change password if required, remember about 12 symbols and other requirements.
+
+To run analisys it's required to generate a token at **My Account → Security → Generate Token** (with option Global Analisys). Paste the token into both config files:
+    - `sonar/sonar-cart.json`
+    - `sonar/sonar-catalog.json`
+
+#### Run Analysis
+
+Use appropriate command to run analisys.
+```powershell
+.\sonar-analyze-cart.ps1
+
+.\sonar-analyze-catalog.ps1
+```
+
+Results will be available at `http://localhost:9000/projects`
+
+### Stop SonarQube When Done
+
+After the analisys done and results are gathered, please, stop SonarQube as it uses min ~2.5GB of RAM, which is not really effective for development & debugging.
+
+```powershell
+docker compose --profile sonar stop
+```
+
+####  Known Issues & Fixes
+
+**WSL2 Memory Usage**
+
+You may see an error in SonarQube container logs like
+
+```
+bootstrap check failure [1] of [1]: max virtual memory areas vm.max_map_count [65530] is too low, increase to at least [262144]; for more information see [https://www.elastic.co/guide/en/elasticsearch/reference/8.19/bootstrap-checks-max-map-count.html]
+```
+
+This occurs because of SonarQube + full stack can consume **5.5GB+ RAM** and default memory setting (65k) is not enough. Temporary solution is to run the following command in powershell
+
+```
+wsl -d docker-desktop -u root sysctl -w vm.max_map_count=262144
+```
+
+Warning! This can increase your **vmmemwsl** RAM usage up to 8.7-10 GB. Stop SonarQube when it is not required.
+
+Alternative way: cap WSL2 memory by creating/editing `C:\Users\<YourUser>\.wslconfig`:
+
+```
+[wsl2]
+memory=5GB
+processors=2
+swap=2GB
+kernelCommandLine = sysctl.vm.max_map_count=262144
+```
+
+Recommended  `memory=4GB` for at least 8GB RAM,  `memory=5GB` for 16GB RAM.
+
+Then restart WSL:
+
+```powershell
+wsl --shutdown
+# After the command, restart Docker / Rancher Desktop from system tray
+```
