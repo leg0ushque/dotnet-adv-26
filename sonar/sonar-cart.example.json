@@ -1,0 +1,11 @@
+{
+  "sonar.projectKey": "ecommerce-cart-service",
+  "sonar.projectName": "Ecommerce Cart Service",
+  "sonar.projectVersion": "1.0.0",
+  "sonar.host.url": "http://host:port",
+  "sonar.token": "<YOUR_SONAR_TOKEN_HERE>",
+  "sonar.sources": ".",
+  "sonar.exclusions": "**/bin/**,**/obj/**,**/*.Designer.cs,**/Migrations/**",
+  "sonar.cs.opencover.reportsPaths": "**/coverage.opencover.xml",
+  "sonar.cs.vstest.reportsPaths": "**/*.trx"
+}
