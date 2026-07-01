@@ -1,3 +1,176 @@
+# 09. Containerization
+
+### 1. What is orchestration?
+
+Orchestration is the automated management of containerized workloads (applications, services, etc) - scheduling containers across a cluster of machines, handling scaling up/down, restarting failed containers, managing networking between services, and rolling out updates without downtime.
+
+### 2. What is containerization and the pros and cons of using it?
+
+- ➕Portability: same container image runs in dev, CI, staging, production with minimal differences
+- ➕ Consistency: dependency versions and environment captured in image, reducing “works on my machine”
+- ➕ Efficiency: lower overhead than VMs with multiple containers sharing the host kernel
+- ➕ Fast startup: containers start in seconds, enabling rapid scaling and CI feedback
+- ➕ Microservices fit: facilitates decomposing apps into small, independently deployable services
+- ➕ Immutable deploys: images are immutable artifacts, improving reproducibility and rollback
+- ➕ Better resource density: More instances per host versus full VMs
+
+At the same time, the disadvantages:  
+- ➖ Security surface: shared kernel increases attack surface; misconfigured containers can leak privileges
+- ➖ Complexity: orchestration, networking, storage, observability stack adds operational complexity
+- ➖ Stateful services: managing state, persistent storage, and data consistency needs additional patterns
+- ➖ Monitoring/tracing: requires specialized tooling to collect logs, metrics, traces across ephemeral containers
+- ➖ Image sprawl: poor image management leads to large registries and outdated/unused/vulnerable dependencies
+- ➖ Platform differences: OS-kernel features and filesystem differences can still cause issues (Windows vs Linux)
+
+### 3. What is the difference between containerization and virtualization?
+
+Abstraction level: virtualization (VMs) virtualizes hardware; each VM runs its own guest OS on a hypervisor. Containerization virtualizes at the OS level; containers share the host kernel and isolate processes and file systems  
+
+Resources usage and startup time: VMs are heavier (full OS per VM, larger images, slower boot); containers are lightweight and start faster. VM images are larger; container images are smaller and more modular  
+
+Isolation: VMs provide stronger isolation (hardware-level), which can be safer for multi-tenant scenarios. Containers isolate processes but share kernel, so isolation is weaker unless hardened  
+
+Density and performance: containers usually allow higher density and less performance overhead  
+
+Use cases: VMs are suitable when full OS isolation is required; containers suit microservices, stateless apps, CI pipelines
+
+### 4. Explain the usage flow of Docker & Kubernetes.
+
+Docker flow has following steps:
+- write Dockerfile describing base image, dependencies, build steps
+- build image locally or in CI: docker build -> image artifact with tag
+- test/run locally: docker run (or docker-compose for multi-container dev)
+- push image to registry (Docker Hub, private registry, Azure ACR, GCR)
+- CI/CD pipeline pulls image and deploys to target environment (or builds image in pipeline).
+
+Kubernetes flow:
+- package app as container image and push to registry.
+- create Kubernetes manifests: Deployment (desired replicas, image), Service (networking/load balancing), ConfigMap/Secret (configuration), PersistentVolumeClaims (storage), Ingress (external routing)
+- apply manifests: kubectl apply -f or use GitOps (ArgoCD/Flux).
+- Kube Scheduler places pods on nodes, kube-proxy and CNI handle networking, control plane ensures desired state (replicas, restarts)
+- for updates: perform rolling update by changing Deployment image, Kubernetes performs controlled rollout with health checks and rollout strategy.
+
+Additional options of k8s:
+- Observability: use Prometheus, Grafana, ELK/EFK, and tracing for logs/metrics/traces.
+- Autoscaling: use Horizontal Pod Autoscaler (HPA) for scaling based on metrics.
+- Operators/CRDs handle more advanced lifecycle automation for stateful/control-plane apps.
+
+### 5. What are the best practices for containerization?
+
+There are  
+- Small, single-responsibility images: one process per container, keep images minimal (use slim base images or distroless - unit with runtime dependencies)
+- Layering and caching: order Dockerfile to maximize cache reuse (install dependencies before copying frequently changing files)    
+- Pin versions: pin base images and dependencies to prevent unexpected changes   
+- Image scanning: scan images for vulnerabilities in CI (popular scanning tools - Snyk, Trivy, Clair)
+- Least privilege: run processes as non-root inside containers; avoid CAP_NET_ADMIN and other capabilities unless needed
+- Health checks: provide liveness and readiness probes for orchestration to manage lifecycle
+- Immutable configuration: externalize config via environment variables, ConfigMaps/Secrets; avoid putting environment-specific data into images
+- Logging and metrics: write logs to stdout/stderr, expose metrics endpoints, integrate with centralized logging and monitoring
+- Small layers and multi-stage builds: use multi-stage builds to separate build-time and runtime artifacts, reducing final image size    
+- Secrets management: do not store secrets in images or Git; use secrets stores (Kubernetes Secrets, Vault)    
+- Resource limits/requests: set CPU/memory requests and limits to enable scheduler decisions and avoid "noisy neighbors"    
+- CI integration: build and test images in CI, sign and promote images through environments with image tags 
+- Reproducible builds: use deterministic builds and lock dependency versions
+- Use registries and retention policies: clean up old images and control access to registries
+
+### 6. How is Docker CI different from classic CI pipeline?
+
+Classic CI pipeline (source-to-build-to-test) focuses on building application artifacts from source (binaries, packages). It has following steps: checkout, restore packages, compile, unit tests, integration tests, produce artifact (NuGet, JAR, ZIP). Artifacts are deployed to artifact repository, then deployment pipeline picks them up.
+
+Docker CI pipeline builds container images as first-class artifacts. Its steps are: checkout, build image (Dockerfile), run containerized tests (unit/integration inside container), scan image for vulnerabilities, push image to registry. Images become deployable artifacts that encompass runtime and dependencies.  
+
+Differences of these pipelines:      
+- Artifact type: container image vs language-specific artifact
+- Environment parity: Tests run in containerized environment, improving parity with production  
+- CI must handle image lifecycle: tagging, signing, scanning, retagging for environments, and registry authentication
+- Caching and build performance: layer caching and multi-stage builds affect pipeline design
+- Security: additional image scanning and supply-chain security steps (image signing, SBOM generation)
+- Deployment: CD pipeline pulls container images and deploys to orchestrator (Kubernetes) rather than installing packages on hosts    
+- Complexity: Docker CI introduces container build infrastructure and registry management needs
+
+---
+
+# 08. Code quality
+
+### 1. Which NFRs are affected by the code quality? What are the code quality metrics?
+
+* Maintainability: Ease of understanding, modifying, and extending code.  
+* Reliability: Defects frequency, stability under expected conditions.  
+* Performance efficiency: Execution speed and resource use.  
+* Security: Vulnerabilities introduced by code patterns. 
+* Testability: Ability to write and run tests easily and deterministically.
+* Scalability: Ability to scale horizontally/vertically with clean code.
+* Portability: Clean separation of platform-specific code.
+
+E.g. compliance is not affected or impact is little because determined by legal, regulatory and policy requirements.
+
+Common code quality metrics:  
+* Code complexity: Cyclomatic complexity, cognitive complexity.
+* Code coverage: Percentage of code covered by automated tests (unit, integration).
+* Duplication: Percentage of duplicated lines or blocks.
+* Maintainability index: Composite score (often based on complexity, lines, comments).
+* Static analysis issues: Number and severity of lints, rule violations.
+* Technical debt ratio: Estimated effort to fix issues vs implementing from scratch.
+* Code churn: Frequency and volume of changes to modules.
+* Coupling and cohesion: Module coupling metrics, class cohesion measures.
+* Number of defects/bug density: Bugs per KLOC or per release.
+
+### 2. What are the goals of static code analysis? How many code analyzers can be used on a project?
+
+The goals are   
+- Detect bugs early: Find potential runtime errors, null dereferences, resource leaks  
+- Enforce coding standards: Ensure consistency (naming, formatting, patterns)
+- Identify security issues: Surface common vulnerabilities (injections, insecure defaults)  
+- Measure maintainability: Complexity hotspots, duplicated code  
+- Prevent regressions: Block merging of code that violates rules via checks in CI  
+- Provide developer feedback: Improve code before run-time testing  
+
+The amount of code analyzers is not limited, multiple analyzers can be used concurrently; combine complementary tools (e.g., Roslyn analyzers, StyleCop, FxCop/CA, SonarQube scanner, Snyk for security, OWASP DotNet tools). 
+
+Avoid overlap causing noise; curate rulesets to the project - so Stylecop, Roslyn and Sonar show duplicating warnings for same piece of code.
+
+Typical setups use 2–4 analyzers: a formatter/linter, a static analyzer for correctness/security, and a quality platform (SonarQube) for metrics.
+
+### 3. How to ensure every team member will follow a style guide? How to apply style guide for the legacy projects?
+
+* Automate formatting: use editorconfig, IDE settings, and automatic format-on-save so code format is applied without manual effort
+- Pre-commit hooks: use tools (pre-commit, Husky, or Git hooks) to format and run linters before commits    
+- CI checks: block merges by running analyzers and style checks in CI; fail build on violations (quality gates)    
+- Educate and document: maintain a concise style guide and onboarding docs showing examples and rationale
+- Code review policy: reviewers enforce style rules and point to automated fixes rather than manual reformatting.
+
+For legacy  
+- Use auto-formatters to normalize whitespace and formatting in a big commit, then proceed with smaller changes  
+- Introduce analyzers with progressive enforcement: start with warnings, track issues, then escalate to errors/CI failures.
+- Use baselining: configure analyzers to ignore existing issues and only fail on new violations; plan technical debt sprints for gradual cleanup.
+* Apply per-module policy: prioritize critical or active modules first.
+
+### 4. Which are the pros and cons of the SonarQube analyzer? Think of a criterion to use it on a project?
+
+It is a centralized quality dashboard aggregating metrics (coverage, duplication, complexity, security hotspots) with support of historical trend tracking and technical debt estimation. Besides that, it supports quality gates to block merges/releases based on configurable rules, has wide language support and extensible plugins, has simple integration with CI systems and developer workflows with supporting security rules (SAST-like) and OWASP-related checks.
+    
+Cons: operational overhead (requires hosting, maintenance, storage, and DB tuning for large projects), possible false positives (some rules may report issues that need contextual judgement), 
+- Performance: full analysis can be time-consuming for very large codebases.
+- Overwhelm: default rule sets produce many issues; requires tuning to be useful.
+- Licensing cost: commercial editions add features but cost money for enterprise use.
+    
+When to use? - in cases with multiple repositories or teams need centralized tracking of code quality trends, when quality gates are required in CI to enforce minimum standards, or when project longevity and regulatory/security requirements make continuous code quality monitoring valuable. It may be redundant for small one-off projects or prototypes where hosting/maintenance cost outweighs benefits.
+
+### 5. What are the quality gates?
+
+Quality gates are a set of pass/fail criteria applied to code analysis results to determine whether code is acceptable to proceed (merge, release). Typical gates evaluate metrics such as new code coverage, new critical/severe issues count, duplications, and blocker issues. 
+
+Implementation is simple: enforce in CI so builds fail when gates are not met. Focus gates on “new code” to avoid blocking remediation of legacy debt while preventing new regressions.
+
+Popular gates examples:
+- No new critical or blocker issues on changed code  
+- Code coverage on new/changed code >= X% (e.g., 80%)  
+- New code duplication <= Y%  
+- Maintainability or reliability ratings not degrading  
+- Technical debt ratio below a threshold  
+
+---
+
 # 07. Security. Auth
 
 ### 1. What is the difference between authentication and authorization?

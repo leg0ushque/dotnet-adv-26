@@ -1,13 +1,12 @@
-﻿using Ecommerce.CartService.BusinessLogic.Results;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Threading.Tasks;
+using Ecommerce.CartService.BusinessLogic.Results;
 
-namespace Ecommerce.CartService.BusinessLogic.Services
+namespace Ecommerce.CartService.BusinessLogic.Services;
+
+public interface IService<TEntity, TDto>
 {
-    public interface IService<TEntity, TDto>
-    {
-        Task<Result<string>> CreateAsync(TDto dto);
-        Task<List<TDto>> GetAllAsync();
-        Task<Result> DeleteAsync(string id);
-    }
+    public Task<Result<string>> CreateAsync(TDto dto);
+    public Task<List<TDto>> GetAllAsync();
+    public Task<Result> DeleteAsync(string id);
 }

@@ -6,89 +6,88 @@ using Ecommerce.CatalogService.Domain.Entities;
 using FluentValidation;
 using Moq;
 
-namespace Ecommerce.CatalogService.UnitTests.Categories
+namespace Ecommerce.CatalogService.UnitTests.Categories;
+
+public class CategoryServiceCascadeDeleteTests
 {
-    public class CategoryServiceCascadeDeleteTests
+    private readonly Mock<IRepository<Category>> _mockCategoryRepository;
+    private readonly Mock<IRepository<Product>> _mockProductRepository;
+    private readonly Mock<IValidator<CreateCategoryDto>> _mockCreateValidator;
+    private readonly Mock<IValidator<UpdateCategoryDto>> _mockUpdateValidator;
+    private readonly Mock<IMapper> _mockMapper;
+    private readonly Mock<ITransactionManager> _mockTransactionManager;
+    private readonly CategoryService _categoryService;
+
+    public CategoryServiceCascadeDeleteTests()
     {
-        private readonly Mock<IRepository<Category>> _mockCategoryRepository;
-        private readonly Mock<IRepository<Product>> _mockProductRepository;
-        private readonly Mock<IValidator<CreateCategoryDto>> _mockCreateValidator;
-        private readonly Mock<IValidator<UpdateCategoryDto>> _mockUpdateValidator;
-        private readonly Mock<IMapper> _mockMapper;
-        private readonly Mock<ITransactionManager> _mockTransactionManager;
-        private readonly CategoryService _categoryService;
+        _mockCategoryRepository = new Mock<IRepository<Category>>();
+        _mockProductRepository = new Mock<IRepository<Product>>();
+        _mockCreateValidator = new Mock<IValidator<CreateCategoryDto>>();
+        _mockUpdateValidator = new Mock<IValidator<UpdateCategoryDto>>();
+        _mockMapper = new Mock<IMapper>();
+        _mockTransactionManager = new Mock<ITransactionManager>();
 
-        public CategoryServiceCascadeDeleteTests()
+        _categoryService = new CategoryService(
+            _mockCategoryRepository.Object,
+            _mockProductRepository.Object,
+            _mockCreateValidator.Object,
+            _mockUpdateValidator.Object,
+            _mockMapper.Object,
+            _mockTransactionManager.Object);
+    }
+
+    [Fact]
+    public async Task DeleteCategoryWithProductsAsync_DeletesCategoryAndRelatedProducts()
+    {
+        // Arrange
+        var categoryId = "cat1";
+        var products = new List<Product>
         {
-            _mockCategoryRepository = new Mock<IRepository<Category>>();
-            _mockProductRepository = new Mock<IRepository<Product>>();
-            _mockCreateValidator = new Mock<IValidator<CreateCategoryDto>>();
-            _mockUpdateValidator = new Mock<IValidator<UpdateCategoryDto>>();
-            _mockMapper = new Mock<IMapper>();
-            _mockTransactionManager = new Mock<ITransactionManager>();
+            new("prod1", "Product 1", categoryId, 10.0m, 5),
+            new("prod2", "Product 2", categoryId, 20.0m, 10)
+        };
 
-            _categoryService = new CategoryService(
-                _mockCategoryRepository.Object,
-                _mockProductRepository.Object,
-                _mockCreateValidator.Object,
-                _mockUpdateValidator.Object,
-                _mockMapper.Object,
-                _mockTransactionManager.Object);
-        }
+        var category = new Category(categoryId, "Electronics", null, null);
 
-        [Fact]
-        public async Task DeleteCategoryWithProductsAsync_DeletesCategoryAndRelatedProducts()
-        {
-            // Arrange
-            var categoryId = "cat1";
-            var products = new List<Product>
-            {
-                new("prod1", "Product 1", categoryId, 10.0m, 5),
-                new("prod2", "Product 2", categoryId, 20.0m, 10)
-            };
+        _mockProductRepository
+            .Setup(r => r.GetAllAsync(It.IsAny<System.Linq.Expressions.Expression<Func<Product, bool>>>()))
+            .ReturnsAsync(products);
 
-            var category = new Category(categoryId, "Electronics", null, null);
+        _mockCategoryRepository
+            .Setup(r => r.GetByIdAsync(categoryId))
+            .ReturnsAsync(category);
 
-            _mockProductRepository
-                .Setup(r => r.GetAllAsync(It.IsAny<System.Linq.Expressions.Expression<Func<Product, bool>>>()))
-                .ReturnsAsync(products);
+        // Act
+        await _categoryService.DeleteCategoryWithProductsAsync(categoryId);
 
-            _mockCategoryRepository
-                .Setup(r => r.GetByIdAsync(categoryId))
-                .ReturnsAsync(category);
+        // Assert
+        _mockProductRepository.Verify(r => r.DeleteByIdAsync("prod1"), Times.Once);
+        _mockProductRepository.Verify(r => r.DeleteByIdAsync("prod2"), Times.Once);
+        _mockCategoryRepository.Verify(r => r.DeleteByIdAsync(categoryId), Times.Once);
+    }
 
-            // Act
-            await _categoryService.DeleteCategoryWithProductsAsync(categoryId);
+    [Fact]
+    public async Task DeleteCategoryWithProductsAsync_WithNoProducts_DeletesOnlyCategory()
+    {
+        // Arrange
+        var categoryId = "cat1";
+        var products = new List<Product>();
 
-            // Assert
-            _mockProductRepository.Verify(r => r.DeleteByIdAsync("prod1"), Times.Once);
-            _mockProductRepository.Verify(r => r.DeleteByIdAsync("prod2"), Times.Once);
-            _mockCategoryRepository.Verify(r => r.DeleteByIdAsync(categoryId), Times.Once);
-        }
+        var category = new Category(categoryId, "Electronics", null, null);
 
-        [Fact]
-        public async Task DeleteCategoryWithProductsAsync_WithNoProducts_DeletesOnlyCategory()
-        {
-            // Arrange
-            var categoryId = "cat1";
-            var products = new List<Product>();
+        _mockProductRepository
+            .Setup(r => r.GetAllAsync(It.IsAny<System.Linq.Expressions.Expression<Func<Product, bool>>>()))
+            .ReturnsAsync(products);
 
-            var category = new Category(categoryId, "Electronics", null, null);
+        _mockCategoryRepository
+            .Setup(r => r.GetByIdAsync(categoryId))
+            .ReturnsAsync(category);
 
-            _mockProductRepository
-                .Setup(r => r.GetAllAsync(It.IsAny<System.Linq.Expressions.Expression<Func<Product, bool>>>()))
-                .ReturnsAsync(products);
+        // Act
+        await _categoryService.DeleteCategoryWithProductsAsync(categoryId);
 
-            _mockCategoryRepository
-                .Setup(r => r.GetByIdAsync(categoryId))
-                .ReturnsAsync(category);
-
-            // Act
-            await _categoryService.DeleteCategoryWithProductsAsync(categoryId);
-
-            // Assert
-            _mockProductRepository.Verify(r => r.DeleteByIdAsync(It.IsAny<string>()), Times.Never);
-            _mockCategoryRepository.Verify(r => r.DeleteByIdAsync(categoryId), Times.Once);
-        }
+        // Assert
+        _mockProductRepository.Verify(r => r.DeleteByIdAsync(It.IsAny<string>()), Times.Never);
+        _mockCategoryRepository.Verify(r => r.DeleteByIdAsync(categoryId), Times.Once);
     }
 }

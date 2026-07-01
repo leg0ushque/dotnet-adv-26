@@ -1,25 +1,24 @@
-namespace Ecommerce.CatalogService.Persistence.Configuration
+namespace Ecommerce.CatalogService.Persistence.Configuration;
+
+public class RabbitMqOptions
 {
-    public class RabbitMqOptions
-    {
-        public const string SectionName = "RabbitMQ";
+    public const string SectionName = "RabbitMQ";
 
-        public string HostName { get; set; } = "localhost";
+    public string HostName { get; set; } = "localhost";
 
-        public int Port { get; set; } = 5672;
+    public int Port { get; set; } = 5672;
 
-        public string UserName { get; set; } = "guest";
+    public string UserName { get; set; } = "guest";
 
-        public string Password { get; set; } = "guest";
+    public string Password { get; set; } = "guest";
 
-        public string ExchangeName { get; set; } = "catalog_events";
+    public string ExchangeName { get; set; } = "catalog_events";
 
-        public string QueueName { get; set; } = "catalog_queue";
+    public string QueueName { get; set; } = "catalog_queue";
 
-        public string RoutingKeyPrefix { get; set; } = "catalog.";
+    public string RoutingKeyPrefix { get; set; } = "catalog.";
 
-        public bool AutomaticRecoveryEnabled { get; set; } = true;
+    public bool AutomaticRecoveryEnabled { get; set; } = true;
 
-        public int NetworkRecoveryIntervalSeconds { get; set; } = 10;
-    }
+    public int NetworkRecoveryIntervalSeconds { get; set; } = 10;
 }

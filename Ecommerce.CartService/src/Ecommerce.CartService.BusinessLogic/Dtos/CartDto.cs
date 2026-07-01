@@ -1,10 +1,8 @@
 ﻿using System.Collections.Generic;
 
-namespace Ecommerce.CartService.BusinessLogic.Dtos
-{
-    public class CartDto : BaseDto
-    {
+namespace Ecommerce.CartService.BusinessLogic.Dtos;
 
-        public List<CartItemDto> Items { get; set; } = new();
-    }
+public class CartDto : BaseDto
+{
+    public List<CartItemDto> Items { get; set; } = [];
 }

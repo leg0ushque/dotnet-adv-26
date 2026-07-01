@@ -1,7 +1,6 @@
-﻿namespace Ecommerce.CartService.BusinessLogic.Dtos
+﻿namespace Ecommerce.CartService.BusinessLogic.Dtos;
+
+public interface IDto
 {
-    public interface IDto
-    {
-        public string Id { get; set; }
-    }
+    public string Id { get; set; }
 }

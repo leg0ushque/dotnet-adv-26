@@ -1,145 +1,144 @@
-﻿using AutoFixture;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
+using AutoFixture;
 using Ecommerce.CartService.DataAccess.Entities;
 using Ecommerce.CartService.DataAccess.Factories;
 using Ecommerce.CartService.DataAccess.Repositories;
 using FluentAssertions;
 using MongoDB.Driver;
 using Moq;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
 using Xunit;
 
-namespace Ecommerce.CartService.DataAccess.UnitTests.Repositories
+namespace Ecommerce.CartService.DataAccess.UnitTests.Repositories;
+
+public abstract class GenericMongoRepositoryTestsBase<TEntity>
+    where TEntity : class, IEntity
 {
-    public abstract class GenericMongoRepositoryTestsBase<TEntity>
-        where TEntity : class, IEntity
+    public required IFixture fixture;
+
+    public required List<TEntity> entities;
+
+    public required Mock<IAsyncCursor<TEntity>> asyncCursorMock;
+    public required Mock<IMongoDbFactory> mongoDbFactoryMock;
+    public required Mock<IMongoCollection<TEntity>> mongoCollectionMock;
+
+    public required IRepository<TEntity> repository;
+
+    public abstract IRepository<TEntity> CreateRepository(IMongoDbFactory factory);
+
+    protected GenericMongoRepositoryTestsBase()
     {
-        public required IFixture fixture;
+        Setup();
+    }
 
-        public required List<TEntity> entities;
+    public void Setup()
+    {
+        fixture = new Fixture();
 
-        public required Mock<IAsyncCursor<TEntity>> asyncCursorMock;
-        public required Mock<IMongoDbFactory> mongoDbFactoryMock;
-        public required Mock<IMongoCollection<TEntity>> mongoCollectionMock;
+        mongoDbFactoryMock = new Mock<IMongoDbFactory>();
+        mongoCollectionMock = new Mock<IMongoCollection<TEntity>>();
 
-        public required IRepository<TEntity> repository;
+        entities = [.. fixture.Build<TEntity>().With(x => x.Id, Guid.NewGuid().ToString()).CreateMany<TEntity>(5)];
 
-        public abstract IRepository<TEntity> CreateRepository(IMongoDbFactory factory);
+        asyncCursorMock = new Mock<IAsyncCursor<TEntity>>();
 
-        protected GenericMongoRepositoryTestsBase()
-        {
-            Setup();
-        }
+        asyncCursorMock
+            .SetupSequence(_ => _.MoveNextAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(true)
+            .ReturnsAsync(false);
+        asyncCursorMock
+            .SetupGet(_ => _.Current)
+            .Returns(entities);
 
-        public void Setup()
-        {
-            fixture = new Fixture();
+        asyncCursorMock.SetupGet(_ => _.Current).Returns(entities);
 
-            mongoDbFactoryMock = new Mock<IMongoDbFactory>();
-            mongoCollectionMock = new Mock<IMongoCollection<TEntity>>();
+        mongoCollectionMock.Setup(x => x.FindAsync(
+                It.IsAny<FilterDefinition<TEntity>>(),
+                It.IsAny<FindOptions<TEntity, TEntity>>(),
+                It.IsAny<CancellationToken>()))
+          .ReturnsAsync(asyncCursorMock.Object);
 
-            entities = [.. fixture.Build<TEntity>().With(x => x.Id, Guid.NewGuid().ToString()).CreateMany<TEntity>(5)];
+        mongoCollectionMock.Setup(x =>
+            x.InsertOneAsync(
+                It.IsAny<TEntity>(),
+                It.IsAny<InsertOneOptions>(),
+                It.IsAny<CancellationToken>()))
+            .Returns(Task.CompletedTask)
+            .Callback<TEntity, InsertOneOptions, CancellationToken>((entity, options, ct) =>
+            {
+                entities.Add(entity);
+            });
 
-            asyncCursorMock = new Mock<IAsyncCursor<TEntity>>();
+        var updatedEntity = entities.FirstOrDefault();
 
-            asyncCursorMock
-                .SetupSequence(_ => _.MoveNextAsync(It.IsAny<CancellationToken>()))
-                .ReturnsAsync(true)
-                .ReturnsAsync(false);
-            asyncCursorMock
-                .SetupGet(_ => _.Current)
-                .Returns(entities);
+        mongoCollectionMock.Setup(x =>
+            x.DeleteOneAsync(
+                It.IsAny<FilterDefinition<TEntity>>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new Mock<DeleteResult>().Object)
+            .Callback<FilterDefinition<TEntity>, CancellationToken>((filter, ct) =>
+            {
+                entities.Remove(updatedEntity!);
+            });
 
-            asyncCursorMock.SetupGet(_ => _.Current).Returns(entities);
+        mongoDbFactoryMock.Setup(x => x.GetCollection<TEntity>(It.IsAny<string>()))
+            .Returns(mongoCollectionMock.Object);
 
-            mongoCollectionMock.Setup(x => x.FindAsync(
-                    It.IsAny<FilterDefinition<TEntity>>(),
-                    It.IsAny<FindOptions<TEntity, TEntity>>(),
-                    It.IsAny<CancellationToken>()))
-              .ReturnsAsync(asyncCursorMock.Object);
+        repository = CreateRepository(mongoDbFactoryMock.Object);
+    }
 
-            mongoCollectionMock.Setup(x =>
-                x.InsertOneAsync(
-                    It.IsAny<TEntity>(),
-                    It.IsAny<InsertOneOptions>(),
-                    It.IsAny<CancellationToken>()))
-                .Returns(Task.CompletedTask)
-                .Callback<TEntity, InsertOneOptions, CancellationToken>((entity, options, ct) =>
-                {
-                    entities.Add(entity);
-                });
+    [Fact]
+    public async Task GetAllAsync_WhenInvoked_ShouldCallFindAsync()
+    {
+        var result = await repository.GetAllAsync();
 
-            var updatedEntity = entities.FirstOrDefault();
+        mongoCollectionMock.Verify(x =>
+            x.FindAsync(
+                It.Is<ExpressionFilterDefinition<TEntity>>(_ => true),
+                It.IsAny<FindOptions<TEntity, TEntity>>(),
+                It.IsAny<CancellationToken>()),
+            Times.Once);
 
-            mongoCollectionMock.Setup(x =>
-                x.DeleteOneAsync(
-                    It.IsAny<FilterDefinition<TEntity>>(),
-                    It.IsAny<CancellationToken>()))
-                .ReturnsAsync(new Mock<DeleteResult>().Object)
-                .Callback<FilterDefinition<TEntity>, CancellationToken>((filter, ct) =>
-                {
-                    entities.Remove(updatedEntity!);
-                });
+        result.Should().BeEquivalentTo(entities);
+    }
 
-            mongoDbFactoryMock.Setup(x => x.GetCollection<TEntity>(It.IsAny<string>()))
-                .Returns(mongoCollectionMock.Object);
+    [Fact]
+    public async Task CreateAsync_WhenInvoked_ShouldCallInsertOneAsync()
+    {
+        var beforeCountValue = entities.Count;
 
-            repository = CreateRepository(mongoDbFactoryMock.Object);
-        }
+        var newEntity = fixture.Create<TEntity>();
 
-        [Fact]
-        public async Task GetAllAsync_WhenInvoked_ShouldCallFindAsync()
-        {
-            var result = await repository.GetAllAsync();
+        await repository.CreateAsync(newEntity);
 
-            mongoCollectionMock.Verify(x =>
-                x.FindAsync(
-                    It.Is<ExpressionFilterDefinition<TEntity>>(_ => true),
-                    It.IsAny<FindOptions<TEntity, TEntity>>(),
-                    It.IsAny<CancellationToken>()),
-                Times.Once);
+        mongoCollectionMock.Verify(x =>
+            x.InsertOneAsync(
+                It.IsAny<TEntity>(),
+                It.IsAny<InsertOneOptions>(),
+                It.IsAny<CancellationToken>()),
+            Times.Once);
 
-            result.Should().BeEquivalentTo(entities);
-        }
+        entities.Should().HaveCount(beforeCountValue + 1);
 
-        [Fact]
-        public async Task CreateAsync_WhenInvoked_ShouldCallInsertOneAsync()
-        {
-            var beforeCountValue = entities.Count;
+        entities.Should().ContainEquivalentOf(newEntity);
+    }
 
-            var newEntity = fixture.Create<TEntity>();
+    [Fact]
+    public async Task DeleteAsync_WhenInvoked_ShouldCallDeleteOneAsync()
+    {
+        var existingEntity = entities.FirstOrDefault()!;
 
-            await repository.CreateAsync(newEntity);
+        await repository.DeleteAsync(existingEntity.Id);
 
-            mongoCollectionMock.Verify(x =>
-                x.InsertOneAsync(
-                    It.IsAny<TEntity>(),
-                    It.IsAny<InsertOneOptions>(),
-                    It.IsAny<CancellationToken>()),
-                Times.Once);
+        mongoCollectionMock.Verify(x =>
+            x.DeleteOneAsync(
+                It.IsAny<FilterDefinition<TEntity>>(),
+                It.IsAny<CancellationToken>()),
+            Times.Once);
 
-            entities.Should().HaveCount(beforeCountValue + 1);
-
-            entities.Should().ContainEquivalentOf(newEntity);
-        }
-
-        [Fact]
-        public async Task DeleteAsync_WhenInvoked_ShouldCallDeleteOneAsync()
-        {
-            var existingEntity = entities.FirstOrDefault()!;
-
-            await repository.DeleteAsync(existingEntity.Id);
-
-            mongoCollectionMock.Verify(x =>
-                x.DeleteOneAsync(
-                    It.IsAny<FilterDefinition<TEntity>>(),
-                    It.IsAny<CancellationToken>()),
-                Times.Once);
-
-            entities.Should().NotContain(existingEntity);
-        }
+        entities.Should().NotContain(existingEntity);
     }
 }

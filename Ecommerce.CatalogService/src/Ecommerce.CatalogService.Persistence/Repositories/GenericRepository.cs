@@ -1,56 +1,55 @@
+using System.Linq.Expressions;
 using Ecommerce.CatalogService.Application.Common.Interfaces;
 using Ecommerce.CatalogService.Domain.Common;
 using Ecommerce.CatalogService.Persistence.Data;
 using Microsoft.EntityFrameworkCore;
-using System.Linq.Expressions;
 
-namespace Ecommerce.CatalogService.Persistence.Repositories
+namespace Ecommerce.CatalogService.Persistence.Repositories;
+
+public class GenericRepository<TEntity>(EcommerceCatalogDbContext context) : IRepository<TEntity> where TEntity : BaseEntity
 {
-    public class GenericRepository<TEntity>(EcommerceCatalogDbContext context) : IRepository<TEntity> where TEntity : BaseEntity
+    private readonly EcommerceCatalogDbContext _context = context;
+
+    public async Task<string> CreateAsync(TEntity item)
     {
-        private readonly EcommerceCatalogDbContext _context = context;
+        item.Id = Guid.NewGuid().ToString();
 
-        public async Task<string> CreateAsync(TEntity item)
+        await _context.Set<TEntity>().AddAsync(item);
+
+        return item.Id;
+    }
+
+    public async Task DeleteByIdAsync(string id)
+    {
+        var entity = await _context.Set<TEntity>().FindAsync(id);
+        if (entity != null)
         {
-            item.Id = Guid.NewGuid().ToString();
+            _context.Set<TEntity>().Remove(entity);
+        }
+    }
 
-            await _context.Set<TEntity>().AddAsync(item);
+    public async Task<List<TEntity>> GetAllAsync(Expression<Func<TEntity, bool>>? filter = null)
+    {
+        IQueryable<TEntity> query = _context.Set<TEntity>();
 
-            return item.Id;
+        if (filter != null)
+        {
+            query = query.Where(filter);
         }
 
-        public async Task DeleteByIdAsync(string id)
-        {
-            var entity = await _context.Set<TEntity>().FindAsync(id);
-            if (entity != null)
-            {
-                _context.Set<TEntity>().Remove(entity);
-            }
-        }
+        return await query.ToListAsync();
+    }
 
-        public async Task<List<TEntity>> GetAllAsync(Expression<Func<TEntity, bool>>? filter = null)
-        {
-            IQueryable<TEntity> query = _context.Set<TEntity>();
+    public Task<TEntity?> GetByIdAsync(string id)
+        => GetSingleAsync(e => e.Id == id);
 
-            if (filter != null)
-            {
-                query = query.Where(filter);
-            }
+    public Task<TEntity?> GetSingleAsync(Expression<Func<TEntity, bool>> filter)
+        => _context.Set<TEntity>().FirstOrDefaultAsync(filter);
 
-            return await query.ToListAsync();
-        }
+    public async Task UpdateAsync(TEntity item)
+    {
+        _context.Set<TEntity>().Update(item);
 
-        public Task<TEntity?> GetByIdAsync(string id)
-            => GetSingleAsync(e => e.Id == id);
-
-        public Task<TEntity?> GetSingleAsync(Expression<Func<TEntity, bool>> filter)
-            => _context.Set<TEntity>().FirstOrDefaultAsync(filter);
-
-        public async Task UpdateAsync(TEntity item)
-        {
-            _context.Set<TEntity>().Update(item);
-
-            await Task.CompletedTask;
-        }
+        await Task.CompletedTask;
     }
 }

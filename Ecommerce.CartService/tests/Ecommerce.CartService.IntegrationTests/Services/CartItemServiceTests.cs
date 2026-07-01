@@ -1,23 +1,21 @@
-﻿using AutoFixture;
+﻿using System.Threading.Tasks;
+using AutoFixture;
 using AutoMapper;
 using Ecommerce.CartService.BusinessLogic.Dtos;
 using Ecommerce.CartService.BusinessLogic.Mappings;
-using Ecommerce.CartService.BusinessLogic.Services;
 using Ecommerce.CartService.BusinessLogic.Validators;
 using Ecommerce.CartService.DataAccess.Entities;
 using Ecommerce.CartService.DataAccess.Repositories;
 using FluentAssertions;
 using Microsoft.Extensions.Logging.Abstractions;
-using System.Collections.Generic;
-using System.Threading.Tasks;
 using Xunit;
 
-namespace Ecommerce.CartService.IntegrationTests.Services
-{
+namespace Ecommerce.CartService.IntegrationTests.Services;
+
 public class CartServiceTests : IClassFixture<DatabaseFixture>
 {
     private readonly Fixture _fixture;
-    private readonly ICartService _cartService;
+    private readonly BusinessLogic.Services.CartService _cartService;
     private readonly IRepository<Cart> _cartRepository;
 
     public CartServiceTests(DatabaseFixture dbFixture)
@@ -35,7 +33,7 @@ public class CartServiceTests : IClassFixture<DatabaseFixture>
     public async Task CreateAsync_WhenCartIsCreatedAndFetched_ReturnsCart()
     {
         var cartKey = _fixture.Create<string>();
-        var cartDto = new CartDto { Id = cartKey, Items = new List<CartItemDto>() };
+        var cartDto = new CartDto { Id = cartKey, Items = [] };
         var createResult = await _cartService.CreateAsync(cartDto);
         createResult.IsSuccess.Should().BeTrue();
 
@@ -135,7 +133,7 @@ public class CartServiceTests : IClassFixture<DatabaseFixture>
     public async Task DeleteAsync_WhenCartExists_RemovesCart()
     {
         var cartKey = _fixture.Create<string>();
-        var cartDto = new CartDto { Id = cartKey, Items = new List<CartItemDto>() };
+        var cartDto = new CartDto { Id = cartKey, Items = [] };
         await _cartService.CreateAsync(cartDto);
 
         var deleteResult = await _cartService.DeleteAsync(cartKey);
@@ -160,5 +158,4 @@ public class CartServiceTests : IClassFixture<DatabaseFixture>
         result.IsSuccess.Should().BeFalse();
         result.Error.Should().NotBeNull();
     }
-}
 }

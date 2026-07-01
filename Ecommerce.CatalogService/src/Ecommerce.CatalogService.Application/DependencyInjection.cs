@@ -7,20 +7,19 @@ using Ecommerce.CatalogService.Application.Profiles;
 using FluentValidation;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace Ecommerce.CatalogService.Application
+namespace Ecommerce.CatalogService.Application;
+
+public static class DependencyInjection
 {
-    public static class DependencyInjection
+    public static IServiceCollection AddApplication(this IServiceCollection services)
     {
-        public static IServiceCollection AddApplication(this IServiceCollection services)
-        {
-            services.AddScoped<ICategoryService, CategoryService>();
-            services.AddScoped<IProductService, ProductService>();
+        services.AddScoped<ICategoryService, CategoryService>();
+        services.AddScoped<IProductService, ProductService>();
 
-            services.AddValidatorsFromAssemblyContaining<CreateCategoryValidator>();
+        services.AddValidatorsFromAssemblyContaining<CreateCategoryValidator>();
 
-            services.AddAutoMapper(x => x.AddProfile<ApplicationMappingProfile>());
+        services.AddAutoMapper(x => x.AddProfile<ApplicationMappingProfile>());
 
-            return services;
-        }
+        return services;
     }
 }

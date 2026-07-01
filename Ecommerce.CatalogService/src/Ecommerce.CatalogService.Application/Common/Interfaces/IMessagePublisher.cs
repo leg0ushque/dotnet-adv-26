@@ -1,8 +1,7 @@
-namespace Ecommerce.CatalogService.Application.Common.Interfaces
+namespace Ecommerce.CatalogService.Application.Common.Interfaces;
+
+public interface IMessagePublisher
 {
-    public interface IMessagePublisher
-    {
-        public Task PublishAsync(string serializedBody, string eventTypeName, 
-            CancellationToken cancellationToken = default);
-    }
+    public Task PublishAsync(string serializedBody, string eventTypeName,
+        CancellationToken cancellationToken = default);
 }

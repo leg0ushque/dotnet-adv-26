@@ -6,27 +6,26 @@ using Ecommerce.CartService.Messaging.Models;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace Ecommerce.CartService.Messaging
+namespace Ecommerce.CartService.Messaging;
+
+public static class DependencyInjection
 {
-    public static class DependencyInjection
+    public static IServiceCollection AddMessagingServices(
+        this IServiceCollection services)
     {
-        public static IServiceCollection AddMessagingServices(
-            this IServiceCollection services)
-        {
-            services.AddOptions<RabbitMqOptions>()
-                .Configure<IConfiguration>((settings, config) =>
-                {
-                    config.GetSection(RabbitMqOptions.SectionName).Bind(settings);
-                });
+        services.AddOptions<RabbitMqOptions>()
+            .Configure<IConfiguration>((settings, config) =>
+            {
+                config.GetSection(RabbitMqOptions.SectionName).Bind(settings);
+            });
 
-            services.AddHostedService<UpdatedProductConsumer>();
+        services.AddHostedService<UpdatedProductConsumer>();
 
-            services.AddSingleton<RabbitMqConnectionFactory>();
-            services.AddHostedService<RabbitMqTopologyInitializer>();
+        services.AddSingleton<RabbitMqConnectionFactory>();
+        services.AddHostedService<RabbitMqTopologyInitializer>();
 
-            services.AddSingleton<IMessageHandler<UpdatedProductMessage>, UpdatedProductHandler>();
+        services.AddSingleton<IMessageHandler<UpdatedProductMessage>, UpdatedProductHandler>();
 
-            return services;
-        }
+        return services;
     }
 }

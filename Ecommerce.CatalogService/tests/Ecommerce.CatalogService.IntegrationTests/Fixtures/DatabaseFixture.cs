@@ -4,46 +4,39 @@ using Ecommerce.CatalogService.Persistence.Data;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace Ecommerce.CatalogService.IntegrationTests.Fixtures
+namespace Ecommerce.CatalogService.IntegrationTests.Fixtures;
+
+public class DatabaseFixture
 {
-    public class DatabaseFixture : IDisposable
+    public EcommerceCatalogDbContext Context { get; private set; }
+    public IServiceProvider Services { get; private set; }
+
+    public DatabaseFixture()
     {
-        public EcommerceCatalogDbContext Context { get; private set; }
-        public IServiceProvider Services { get; private set; }
+        var services = new ServiceCollection();
 
-        public DatabaseFixture()
-        {
-            var services = new ServiceCollection();
+        // Build configuration with InMemory flag
+        var configuration = new ConfigurationBuilder()
+            .AddInMemoryCollection(new Dictionary<string, string?>
+            {
+                ["UseInMemoryDatabase"] = "true"
+            })
+            .Build();
 
-            // Build configuration with InMemory flag
-            var configuration = new ConfigurationBuilder()
-                .AddInMemoryCollection(new Dictionary<string, string?>
-                {
-                    ["UseInMemoryDatabase"] = "true"
-                })
-                .Build();
+        services.AddLogging();
+        services.AddPersistence(configuration, true);
+        services.AddApplication();
 
-            services.AddLogging();
-            services.AddPersistence(configuration, true);
-            services.AddApplication();
+        Services = services.BuildServiceProvider();
 
-            Services = services.BuildServiceProvider();
+        Context = Services.GetRequiredService<EcommerceCatalogDbContext>();
+        Context.Database.EnsureCreated();
+    }
 
-            Context = Services.GetRequiredService<EcommerceCatalogDbContext>();
-            Context.Database.EnsureCreated();
-        }
-
-        public void Dispose()
-        {
-            Context.Database.EnsureDeleted();
-            Context.Dispose();
-        }
-
-        public void ClearDatabase()
-        {
-            Context.Categories.RemoveRange(Context.Categories);
-            Context.Products.RemoveRange(Context.Products);
-            Context.SaveChanges();
-        }
+    public void ClearDatabase()
+    {
+        Context.Categories.RemoveRange(Context.Categories);
+        Context.Products.RemoveRange(Context.Products);
+        Context.SaveChanges();
     }
 }

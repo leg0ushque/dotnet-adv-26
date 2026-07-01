@@ -2,11 +2,10 @@ using Ecommerce.CatalogService.Application.Categories.DTOs;
 using Ecommerce.CatalogService.Application.Common.Interfaces;
 using Ecommerce.CatalogService.Application.Common.Results;
 
-namespace Ecommerce.CatalogService.Application.Categories.Interfaces
+namespace Ecommerce.CatalogService.Application.Categories.Interfaces;
+
+public interface ICategoryService
+    : IService<CategoryDto, CreateCategoryDto, UpdateCategoryDto>
 {
-    public interface ICategoryService 
-        : IService<CategoryDto, CreateCategoryDto, UpdateCategoryDto>
-    {
-        Task<Result> DeleteCategoryWithProductsAsync(string id);
-    }
+    public Task<Result> DeleteCategoryWithProductsAsync(string id);
 }
