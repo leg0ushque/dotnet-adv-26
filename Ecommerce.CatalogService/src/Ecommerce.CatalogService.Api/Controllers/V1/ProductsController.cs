@@ -76,7 +76,7 @@ public class ProductsController(IProductService productService) : ControllerBase
     /// <param name="createDto">Product creation data</param>
     /// <returns>Created product ID</returns>
     [HttpPost]
-    [Authorize(Policy = AuthConstants.ManagerOnlyPolicy)]
+    [Authorize(Policy = AuthConstants.AdminOnlyPolicy)]
     [ProducesResponseType(typeof(string), StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
@@ -94,7 +94,7 @@ public class ProductsController(IProductService productService) : ControllerBase
     }
 
     [HttpPut("{id}")]
-    [Authorize(Policy = AuthConstants.ManagerOnlyPolicy)]
+    [Authorize(Policy = AuthConstants.AdminOnlyPolicy)]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -118,7 +118,7 @@ public class ProductsController(IProductService productService) : ControllerBase
     }
 
     [HttpDelete("{id}")]
-    [Authorize(Policy = AuthConstants.ManagerOnlyPolicy)]
+    [Authorize(Policy = AuthConstants.AdminOnlyPolicy)]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]

@@ -6,4 +6,6 @@ public static class AuthConstants
     public const string Roles = "roles";
     public const string ManagerRole = "Manager";
     public const string ManagerOnlyPolicy = "ManagerOnly";
+    public const string AdminRole = "Admin";
+    public const string AdminOnlyPolicy = "AdminOnly";
 }

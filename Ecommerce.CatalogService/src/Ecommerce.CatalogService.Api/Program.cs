@@ -69,7 +69,9 @@ public class Program
 
         builder.Services.AddAuthorizationBuilder()
             .AddPolicy(AuthConstants.ManagerOnlyPolicy, policy =>
-                policy.RequireRole(AuthConstants.ManagerRole));
+                policy.RequireRole(AuthConstants.ManagerRole))
+            .AddPolicy(AuthConstants.AdminOnlyPolicy, policy =>
+                policy.RequireRole(AuthConstants.AdminRole));
 
         builder.Services.AddControllers();
 
