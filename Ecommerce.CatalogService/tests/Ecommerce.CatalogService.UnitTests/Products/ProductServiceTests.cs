@@ -16,6 +16,7 @@ namespace Ecommerce.CatalogService.UnitTests.Products;
 public class ProductServiceTests
 {
     private readonly Mock<IRepository<Product>> _mockRepository;
+    private readonly Mock<IRepository<Category>> _mockCategoryRepository;
     private readonly Mock<IValidator<CreateProductDto>> _mockCreateValidator;
     private readonly Mock<IValidator<UpdateProductDto>> _mockUpdateValidator;
     private readonly Mock<IMapper> _mockMapper;
@@ -26,6 +27,7 @@ public class ProductServiceTests
     public ProductServiceTests()
     {
         _mockRepository = new Mock<IRepository<Product>>();
+        _mockCategoryRepository = new Mock<IRepository<Category>>();
         _mockCreateValidator = new Mock<IValidator<CreateProductDto>>();
         _mockUpdateValidator = new Mock<IValidator<UpdateProductDto>>();
         _mockMapper = new Mock<IMapper>();
@@ -41,6 +43,7 @@ public class ProductServiceTests
 
         _productService = new ProductService(
             _mockRepository.Object,
+            _mockCategoryRepository.Object,
             _mockCreateValidator.Object,
             _mockUpdateValidator.Object,
             _mockMapper.Object,
@@ -152,4 +155,87 @@ public class ProductServiceTests
         result.HasNext.Should().BeTrue();
         result.HasPrevious.Should().BeTrue();
     }
+
+    [Fact]
+    public async Task GetProductPropertiesAsync_WithValidId_ReturnsProperties()
+    {
+        // Arrange
+        var productId = "product-1";
+        var categoryId = "cat-1";
+
+        var product = new Product(
+            productId,
+            "Samsung Galaxy S10",
+            categoryId,
+            799.99m,
+            50,
+            "Latest Samsung flagship phone",
+            "https://example.com/s10.jpg");
+
+        var category = new Category(categoryId, "Smartphones", null, null);
+
+        _mockRepository.Setup(r => r.GetByIdAsync(productId)).ReturnsAsync(product);
+        _mockCategoryRepository.Setup(r => r.GetByIdAsync(categoryId)).ReturnsAsync(category);
+
+        // Act
+        var result = await _productService.GetProductPropertiesAsync(productId);
+
+        // Assert
+        result.Should().NotBeNull();
+        result.IsSuccess.Should().BeTrue();
+        result.Value.Should().ContainKey("Id").WhoseValue.Should().Be(productId);
+        result.Value.Should().ContainKey("Name").WhoseValue.Should().Be("Samsung Galaxy S10");
+        result.Value.Should().ContainKey("Price").WhoseValue.Should().Be("799.99");
+        result.Value.Should().ContainKey("Amount").WhoseValue.Should().Be("50");
+        result.Value.Should().ContainKey("Description").WhoseValue.Should().Be("Latest Samsung flagship phone");
+        result.Value.Should().ContainKey("ImageUrl").WhoseValue.Should().Be("https://example.com/s10.jpg");
+        result.Value.Should().ContainKey("Category").WhoseValue.Should().Be("Smartphones");
+        result.Value.Should().ContainKey("CategoryId").WhoseValue.Should().Be(categoryId);
+    }
+
+    [Fact]
+    public async Task GetProductPropertiesAsync_WithNonExistentId_ReturnsFailure()
+    {
+        // Arrange
+        var productId = "non-existent";
+        _mockRepository.Setup(r => r.GetByIdAsync(productId)).ReturnsAsync((Product?)null);
+
+        // Act
+        var result = await _productService.GetProductPropertiesAsync(productId);
+
+        // Assert
+        result.Should().NotBeNull();
+        result.IsFailure.Should().BeTrue();
+        result.Error.Should().NotBeNull();
+        result.Error!.Code.Should().Contain("NotFound");
+    }
+
+    [Fact]
+    public async Task GetProductPropertiesAsync_WithoutOptionalFields_ReturnsOnlyRequiredProperties()
+    {
+        // Arrange
+        var productId = "product-2";
+        var categoryId = "cat-2";
+
+        var product = new Product(productId, "Basic Product", categoryId, 19.99m, 10);
+        var category = new Category(categoryId, "Electronics", null, null);
+
+        _mockRepository.Setup(r => r.GetByIdAsync(productId)).ReturnsAsync(product);
+        _mockCategoryRepository.Setup(r => r.GetByIdAsync(categoryId)).ReturnsAsync(category);
+
+        // Act
+        var result = await _productService.GetProductPropertiesAsync(productId);
+
+        // Assert
+        result.Should().NotBeNull();
+        result.IsSuccess.Should().BeTrue();
+        result.Value.Should().ContainKey("Id");
+        result.Value.Should().ContainKey("Name");
+        result.Value.Should().ContainKey("Price");
+        result.Value.Should().ContainKey("Amount");
+        result.Value.Should().ContainKey("Category");
+        result.Value.Should().NotContainKey("Description");
+        result.Value.Should().NotContainKey("ImageUrl");
+    }
 }
+

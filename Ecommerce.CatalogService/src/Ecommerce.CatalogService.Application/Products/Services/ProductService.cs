@@ -16,6 +16,7 @@ using Microsoft.Extensions.Options;
 namespace Ecommerce.CatalogService.Application.Products.Services;
 
 public class ProductService(IRepository<Product> productRepository,
+    IRepository<Category> categoryRepository,
     IValidator<CreateProductDto> createValidator,
     IValidator<UpdateProductDto> updateValidator,
     IMapper mapper,
@@ -29,6 +30,7 @@ public class ProductService(IRepository<Product> productRepository,
         mapper,
         transactionManager), IProductService
 {
+    private readonly IRepository<Category> _categoryRepository = categoryRepository;
     private readonly IOutboxService _outboxService = outboxService;
     private readonly JsonSerializerOptions _jsonSerializerOptions = jsonSerializerOptions.Value;
 
@@ -95,6 +97,48 @@ public class ProductService(IRepository<Product> productRepository,
             new PaginationOptions { PageNumber = pageNumber, PageSize = pageSize });
 
         return paginated;
+    }
+
+    public async Task<Result<Dictionary<string, string>>> GetProductPropertiesAsync(string productId)
+    {
+        var product = await _repository.GetByIdAsync(productId);
+
+        if (product == null)
+        {
+            return Result.Failure<Dictionary<string, string>>(ErrorResult.NotFound(EntityName, productId));
+        }
+
+        var properties = new Dictionary<string, string>
+        {
+            { "Id", product.Id },
+            { "Name", product.Name },
+            { "Price", product.Price.ToString("F2", System.Globalization.CultureInfo.InvariantCulture) },
+            { "Amount", product.Amount.ToString(System.Globalization.CultureInfo.InvariantCulture) }
+        };
+
+        if (!string.IsNullOrWhiteSpace(product.Description))
+        {
+            properties.Add("Description", product.Description);
+        }
+
+        if (!string.IsNullOrWhiteSpace(product.ImageUrl))
+        {
+            properties.Add("ImageUrl", product.ImageUrl);
+        }
+
+        var category = await _categoryRepository.GetByIdAsync(product.CategoryId);
+        if (category != null)
+        {
+            properties.Add("Category", category.Name);
+            properties.Add("CategoryId", category.Id);
+
+            if (!string.IsNullOrWhiteSpace(category.ParentCategoryId))
+            {
+                properties.Add("ParentCategoryId", category.ParentCategoryId);
+            }
+        }
+
+        return Result.Success(properties);
     }
 
     private Task CreateOutboxMessageAsync(UpdatedProductMessage dto)

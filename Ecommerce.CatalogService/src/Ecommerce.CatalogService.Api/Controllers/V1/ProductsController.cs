@@ -59,6 +59,7 @@ public class ProductsController(IProductService productService) : ControllerBase
             Links =
             [
                 new Link { Href = Url.Action(nameof(GetProduct), new { id })!, Rel = "self", Method = HttpMethod.Get.Method },
+                new Link { Href = Url.Action(nameof(GetProductProperties), new { id })!, Rel = "properties", Method = HttpMethod.Get.Method },
                 new Link { Href = Url.Action(nameof(UpdateProduct), new { id })!, Rel = "update", Method = HttpMethod.Put.Method },
                 new Link { Href = Url.Action(nameof(DeleteProduct), new { id })!, Rel = "delete", Method = HttpMethod.Delete.Method },
                 new Link { Href = Url.Action(nameof(GetProducts))!, Rel = "all-products", Method = HttpMethod.Get.Method },
@@ -132,5 +133,25 @@ public class ProductsController(IProductService productService) : ControllerBase
         }
 
         return NoContent();
+    }
+
+    /// <summary>
+    /// Gets product properties as key-value pairs
+    /// </summary>
+    /// <param name="id">Product ID</param>
+    /// <returns>Dictionary of product properties (e.g., Category = Samsung, Model = S10)</returns>
+    [HttpGet("{id}/properties")]
+    [ProducesResponseType(typeof(Dictionary<string, string>), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<Dictionary<string, string>>> GetProductProperties(string id)
+    {
+        var result = await _productService.GetProductPropertiesAsync(id);
+
+        if (result.IsFailure)
+        {
+            return NotFound(new { error = result.Error!.Message });
+        }
+
+        return Ok(result.Value);
     }
 }
