@@ -1,0 +1,160 @@
+{
+  "Routes": [
+
+    // CATALOG: GET /categories (public, cached 60s)
+    {
+      "DownstreamPathTemplate": "/api/categories",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [ { "Host": "localhost", "Port": 5183 } ],
+      "UpstreamPathTemplate": "/catalog/categories",
+      "UpstreamHttpMethod": [ "GET" ],
+      "SwaggerKey": "catalog",
+      "FileCacheOptions": { "TtlSeconds": 60, "Region": "catalogregion" }
+    },
+
+    // CATALOG: GET /products (public, cached 60s)
+    {
+      "DownstreamPathTemplate": "/api/products",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [ { "Host": "localhost", "Port": 5183 } ],
+      "UpstreamPathTemplate": "/catalog/products",
+      "UpstreamHttpMethod": [ "GET" ],
+      "SwaggerKey": "catalog",
+      "FileCacheOptions": { "TtlSeconds": 60, "Region": "catalogregion" }
+    },
+
+    // CATALOG: POST /products (Admin only)
+    {
+      "DownstreamPathTemplate": "/api/products",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [ { "Host": "localhost", "Port": 5183 } ],
+      "UpstreamPathTemplate": "/catalog/products",
+      "UpstreamHttpMethod": [ "POST" ],
+      "SwaggerKey": "catalog",
+      "AuthenticationOptions": {
+        "AuthenticationProviderKeys": [ "KeycloakBearer" ],
+        "AllowedScopes": []
+      },
+      "RouteClaimsRequirement": { "role": "Admin" }
+    },
+
+    // CATALOG: PUT/PATCH/DELETE /products/{id} (Admin only)
+    {
+      "DownstreamPathTemplate": "/api/products/{id}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [ { "Host": "localhost", "Port": 5183 } ],
+      "UpstreamPathTemplate": "/catalog/products/{id}",
+      "UpstreamHttpMethod": [ "PUT", "PATCH", "DELETE" ],
+      "SwaggerKey": "catalog",
+      "AuthenticationOptions": {
+        "AuthenticationProviderKeys": [ "KeycloakBearer" ],
+        "AllowedScopes": []
+      },
+      "RouteClaimsRequirement": { "role": "Admin" }
+    },
+
+    // CATALOG: POST /categories (Admin only)
+    {
+      "DownstreamPathTemplate": "/api/categories",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [ { "Host": "localhost", "Port": 5183 } ],
+      "UpstreamPathTemplate": "/catalog/categories",
+      "UpstreamHttpMethod": [ "POST" ],
+      "SwaggerKey": "catalog",
+      "AuthenticationOptions": {
+        "AuthenticationProviderKeys": [ "KeycloakBearer" ],
+        "AllowedScopes": []
+      },
+      "RouteClaimsRequirement": { "role": "Admin" }
+    },
+
+    // CATALOG: PUT/PATCH/DELETE /categories/{id} (Admin only)
+    {
+      "DownstreamPathTemplate": "/api/categories/{id}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [ { "Host": "localhost", "Port": 5183 } ],
+      "UpstreamPathTemplate": "/catalog/categories/{id}",
+      "UpstreamHttpMethod": [ "PUT", "PATCH", "DELETE" ],
+      "SwaggerKey": "catalog",
+      "AuthenticationOptions": {
+        "AuthenticationProviderKeys": [ "KeycloakBearer" ],
+        "AllowedScopes": []
+      },
+      "RouteClaimsRequirement": { "role": "Admin" }
+    },
+
+    // CATALOG: GET /products/{productId} (aggregator — ProductDetails)
+    {
+      "Key": "ProductDetails",
+      "DownstreamPathTemplate": "/api/products/{productId}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [ { "Host": "localhost", "Port": 5183 } ],
+      "UpstreamPathTemplate": "/catalog/products/{productId}",
+      "UpstreamHttpMethod": [ "GET" ],
+      "SwaggerKey": "catalog",
+      "ParametersMap": {
+        "productId": "productId"
+      }
+    },
+
+    // CATALOG: GET /products/{productId}/properties (aggregator)
+    {
+      "Key": "ProductProperties",
+      "DownstreamPathTemplate": "/api/products/{productId}/properties",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [ { "Host": "localhost", "Port": 5183 } ],
+      "UpstreamPathTemplate": "/catalog/products/{productId}/properties",
+      "UpstreamHttpMethod": [ "GET" ],
+      "SwaggerKey": "catalog",
+      "ParametersMap": {
+        "productId": "productId"
+      }
+    },
+
+    // CART: all endpoints (pass-through)
+    {
+      "DownstreamPathTemplate": "/api/{everything}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [ { "Host": "localhost", "Port": 5046 } ],
+      "UpstreamPathTemplate": "/cart/{everything}",
+      "UpstreamHttpMethod": [ "GET", "POST", "PUT", "PATCH", "DELETE" ],
+      "SwaggerKey": "cart"
+    }
+
+  ],
+
+  "Aggregates": [
+    {
+      "RouteKeys": [ "ProductDetails", "ProductProperties" ],
+      "UpstreamPathTemplate": "/catalog/products/{productId}/full",
+      "Aggregator": "ProductDetailsAggregator"
+    }
+  ],
+
+  "SwaggerEndPoints": [
+    {
+      "Key": "catalog",
+      "Config": [
+        {
+          "Name": "Catalog Service API",
+          "Version": "v1",
+          "Url": "http://localhost:5183/swagger/v1/swagger.json"
+        }
+      ]
+    },
+    {
+      "Key": "cart",
+      "Config": [
+        {
+          "Name": "Cart Service API",
+          "Version": "v1",
+          "Url": "http://localhost:5046/swagger/v1/swagger.json"
+        }
+      ]
+    }
+  ],
+
+  "GlobalConfiguration": {
+    "BaseUrl": "http://localhost:5000"
+  }
+}
