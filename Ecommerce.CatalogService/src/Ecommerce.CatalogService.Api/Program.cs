@@ -22,6 +22,8 @@ public class Program
     {
         var builder = WebApplication.CreateBuilder(args);
 
+        Console.Title = "Ecommerce CatalogService";
+
         builder.Services.Configure<JsonSerializerOptions>(options =>
         {
             options.PropertyNamingPolicy = JsonNamingPolicy.CamelCase;
