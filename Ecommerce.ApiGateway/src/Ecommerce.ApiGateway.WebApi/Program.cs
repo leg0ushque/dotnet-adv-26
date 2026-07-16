@@ -1,70 +1,110 @@
 using Ecommerce.ApiGateway.WebApi.Aggregators;
 using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.JsonPatch.Operations;
+using Microsoft.OpenApi;
 using Ocelot.Cache.CacheManager;
 using Ocelot.DependencyInjection;
 using Ocelot.Middleware;
 
-namespace Ecommerce.ApiGateway.WebApi
+namespace Ecommerce.ApiGateway.WebApi;
+
+public class Program
 {
-    public class Program
+    public static async Task Main(string[] args)
     {
-        public static async Task Main(string[] args)
+        var builder = WebApplication.CreateBuilder(args);
+
+        Console.Title = "Ecommerce ApiGateway";
+
+        builder.Configuration.AddJsonFile("ocelot.json", optional: false, reloadOnChange: true);
+
+        builder.Services.AddEndpointsApiExplorer();
+        builder.Services.AddSwaggerGen(options =>
         {
-            var builder = WebApplication.CreateBuilder(args);
-
-            Console.Title = "Ecommerce ApiGateway";
-
-            builder.Configuration.AddJsonFile("ocelot.json", optional: false, reloadOnChange: true);
-
-
-            builder.Services.AddEndpointsApiExplorer();
-            builder.Services.AddSwaggerGen();
-
-            builder.Services.AddSwaggerForOcelot(builder.Configuration, opts =>
+            options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
             {
-                opts.GenerateDocsForAggregates = true;
+                Description = "JWT Authorization header using the Bearer scheme. Example: \"Authorization: Bearer {token}\"",
+                Name = "Authorization",
+                In = ParameterLocation.Header,
+                Type = SecuritySchemeType.Http,
+                Scheme = "Bearer",
+                BearerFormat = "JWT"
             });
 
-            builder.Services
-                .AddOcelot(builder.Configuration)
-                .AddCacheManager(x => x.WithDictionaryHandle())
-                .AddSingletonDefinedAggregator<ProductDetailsAggregator>();
+            options.AddSecurityRequirement(document => new OpenApiSecurityRequirement
+            {
+                { new OpenApiSecuritySchemeReference("Bearer", document), new() }
+            });
+        });
 
-            builder.Services.AddAuthentication()
-                .AddJwtBearer("KeycloakBearer", options =>
+        builder.Services.AddSwaggerForOcelot(builder.Configuration, opts =>
+        {
+            opts.GenerateDocsForAggregates = true;
+            opts.AggregateDocsGeneratorPostProcess = (aggregateRoute, routesDocs, pathItemDoc, documentation) =>
+            {
+                if (aggregateRoute.UpstreamPathTemplate == "/catalog/products/{productId}/full")
                 {
-                    options.Authority = builder.Configuration["Keycloak:Authority"];
-                    options.Audience = builder.Configuration["Keycloak:Audience"];
-                    options.RequireHttpsMetadata = false;
-
-                    options.TokenValidationParameters = new()
+                    var operation = pathItemDoc.Operations?[HttpMethod.Get];
+                    if (operation != null)
                     {
-                        ValidateIssuer = true,
-                        ValidateAudience = true,
-                        ValidateLifetime = true,
-                        ValidateIssuerSigningKey = true
-                    };
-                });
+                        operation.Parameters?.Add(new OpenApiParameter()
+                        {
+                            Name = "productId",
+                            Schema = new OpenApiSchema() { Type = JsonSchemaType.String, Format = "string" },
+                            In = ParameterLocation.Path,
+                            Required = true,
+                            Description = "The product identifier"
+                        });
 
-            builder.Services.AddTransient<IClaimsTransformation, KeycloakRolesTransformer>();
+                        operation.Security =
+                        [
+                            new OpenApiSecurityRequirement
+                            { { new OpenApiSecuritySchemeReference("Bearer", documentation), new List<string>() } }
+                        ];
+                    }
+                }
+            };
+        });
 
-            var app = builder.Build();
+        builder.Services
+            .AddOcelot(builder.Configuration)
+            .AddCacheManager(x => x.WithDictionaryHandle())
+            .AddSingletonDefinedAggregator<ProductDetailsAggregator>();
 
-            app.UseAuthentication();
-            app.UseAuthorization();
-
-            app.UseSwaggerForOcelotUI(opts =>
+        builder.Services.AddAuthentication()
+            .AddJwtBearer("KeycloakBearer", options =>
             {
-                opts.PathToSwaggerGenerator = "/swagger/docs";
+                options.Authority = builder.Configuration["Keycloak:Authority"];
+                options.Audience = builder.Configuration["Keycloak:Audience"];
+                options.RequireHttpsMetadata = false;
+
+                options.TokenValidationParameters = new()
+                {
+                    ValidateIssuer = true,
+                    ValidateAudience = true,
+                    ValidateLifetime = true,
+                    ValidateIssuerSigningKey = true
+                };
             });
 
-            app.UseHttpsRedirection();
+        builder.Services.AddTransient<IClaimsTransformation, KeycloakRolesTransformer>();
 
-            app.MapControllers();
+        var app = builder.Build();
 
-            await app.UseOcelot();
+        app.UseAuthentication();
+        app.UseAuthorization();
 
-            app.Run();
-        }
+        app.UseSwaggerForOcelotUI(opts =>
+        {
+            opts.PathToSwaggerGenerator = "/swagger/docs";
+        });
+
+        app.UseHttpsRedirection();
+
+        app.MapControllers();
+
+        await app.UseOcelot();
+
+        app.Run();
     }
 }
