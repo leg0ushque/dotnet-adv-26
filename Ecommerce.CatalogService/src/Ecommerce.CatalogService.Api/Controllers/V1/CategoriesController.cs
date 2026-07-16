@@ -63,7 +63,7 @@ public class CategoriesController(ICategoryService categoryService) : Controller
     /// <param name="createDto">Category creation data</param>
     /// <returns>Created category ID</returns>
     [HttpPost]
-    [Authorize(Policy = AuthConstants.AdminOnlyPolicy)]
+    [Authorize(Policy = AuthConstants.MutatingAdminManagerPolicy)]
     [ProducesResponseType(typeof(string), StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
@@ -81,7 +81,7 @@ public class CategoriesController(ICategoryService categoryService) : Controller
     }
 
     [HttpPut("{id}")]
-    [Authorize(Policy = AuthConstants.AdminOnlyPolicy)]
+    [Authorize(Policy = AuthConstants.MutatingAdminManagerPolicy)]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -109,7 +109,7 @@ public class CategoriesController(ICategoryService categoryService) : Controller
     /// </summary>
     /// <param name="id">Category ID</param>
     [HttpDelete("{id}")]
-    [Authorize(Policy = AuthConstants.AdminOnlyPolicy)]
+    [Authorize(Policy = AuthConstants.MutatingAdminManagerPolicy)]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]

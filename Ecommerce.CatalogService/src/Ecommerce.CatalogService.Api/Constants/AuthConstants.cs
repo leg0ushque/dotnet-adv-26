@@ -4,8 +4,9 @@ public static class AuthConstants
 {
     public const string RealmAccess = "realm_access";
     public const string Roles = "roles";
+
+    public const string AdminRole = "Admin";
     public const string ManagerRole = "Manager";
     public const string ManagerOnlyPolicy = "ManagerOnly";
-    public const string AdminRole = "Admin";
-    public const string AdminOnlyPolicy = "AdminOnly";
+    public const string MutatingAdminManagerPolicy = "AdminOnly";
 }

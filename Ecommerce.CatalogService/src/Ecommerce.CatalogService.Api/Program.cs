@@ -3,6 +3,7 @@ using System.Text.Json;
 using Asp.Versioning;
 using Ecommerce.CatalogService.Api.Configuration;
 using Ecommerce.CatalogService.Api.Constants;
+using Ecommerce.CatalogService.Api.Extensions;
 using Ecommerce.CatalogService.Api.Helpers;
 using Ecommerce.CatalogService.Application;
 using Ecommerce.CatalogService.Persistence;
@@ -69,12 +70,7 @@ public class Program
                 };
             });
 
-        builder.Services.AddAuthorizationBuilder()
-            .AddPolicy(AuthConstants.ManagerOnlyPolicy, policy =>
-                policy.RequireRole(AuthConstants.ManagerRole))
-            .AddPolicy(AuthConstants.AdminOnlyPolicy, policy =>
-                policy.RequireRole(AuthConstants.AdminRole));
-
+        builder.Services.AddCatalogAuthorization();
         builder.Services.AddControllers();
 
         builder.Services.AddApiVersioning(options =>
