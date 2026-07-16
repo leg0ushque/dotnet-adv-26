@@ -3,7 +3,7 @@
 
     // CATALOG: GET /categories (public, cached 60s)
     {
-      "DownstreamPathTemplate": "/api/categories",
+      "DownstreamPathTemplate": "/api/v1/categories",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [ { "Host": "localhost", "Port": 5183 } ],
       "UpstreamPathTemplate": "/catalog/categories",
@@ -14,7 +14,7 @@
 
     // CATALOG: GET /products (public, cached 60s)
     {
-      "DownstreamPathTemplate": "/api/products",
+      "DownstreamPathTemplate": "/api/v1/products",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [ { "Host": "localhost", "Port": 5183 } ],
       "UpstreamPathTemplate": "/catalog/products",
@@ -25,7 +25,7 @@
 
     // CATALOG: POST /products (Admin only)
     {
-      "DownstreamPathTemplate": "/api/products",
+      "DownstreamPathTemplate": "/api/v1/products",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [ { "Host": "localhost", "Port": 5183 } ],
       "UpstreamPathTemplate": "/catalog/products",
@@ -40,7 +40,7 @@
 
     // CATALOG: PUT/PATCH/DELETE /products/{id} (Admin only)
     {
-      "DownstreamPathTemplate": "/api/products/{id}",
+      "DownstreamPathTemplate": "/api/v1/products/{id}",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [ { "Host": "localhost", "Port": 5183 } ],
       "UpstreamPathTemplate": "/catalog/products/{id}",
@@ -55,7 +55,7 @@
 
     // CATALOG: POST /categories (Admin only)
     {
-      "DownstreamPathTemplate": "/api/categories",
+      "DownstreamPathTemplate": "/api/v1/categories",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [ { "Host": "localhost", "Port": 5183 } ],
       "UpstreamPathTemplate": "/catalog/categories",
@@ -70,7 +70,7 @@
 
     // CATALOG: PUT/PATCH/DELETE /categories/{id} (Admin only)
     {
-      "DownstreamPathTemplate": "/api/categories/{id}",
+      "DownstreamPathTemplate": "/api/v1/categories/{id}",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [ { "Host": "localhost", "Port": 5183 } ],
       "UpstreamPathTemplate": "/catalog/categories/{id}",
@@ -86,29 +86,23 @@
     // CATALOG: GET /products/{productId} (aggregator — ProductDetails)
     {
       "Key": "ProductDetails",
-      "DownstreamPathTemplate": "/api/products/{productId}",
+      "DownstreamPathTemplate": "/api/v1/products/{productId}",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [ { "Host": "localhost", "Port": 5183 } ],
-      "UpstreamPathTemplate": "/catalog/products/{productId}",
+      "UpstreamPathTemplate": "/internal/products/{productId}",
       "UpstreamHttpMethod": [ "GET" ],
-      "SwaggerKey": "catalog",
-      "ParametersMap": {
-        "productId": "productId"
-      }
+      "SwaggerKey": "catalog"
     },
 
     // CATALOG: GET /products/{productId}/properties (aggregator)
     {
       "Key": "ProductProperties",
-      "DownstreamPathTemplate": "/api/products/{productId}/properties",
+      "DownstreamPathTemplate": "/api/v1/products/{productId}/properties",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [ { "Host": "localhost", "Port": 5183 } ],
-      "UpstreamPathTemplate": "/catalog/products/{productId}/properties",
+      "UpstreamPathTemplate": "/internal/products/{productId}/properties",
       "UpstreamHttpMethod": [ "GET" ],
-      "SwaggerKey": "catalog",
-      "ParametersMap": {
-        "productId": "productId"
-      }
+      "SwaggerKey": "catalog"
     },
 
     // CART: all endpoints (pass-through)
@@ -127,7 +121,13 @@
     {
       "RouteKeys": [ "ProductDetails", "ProductProperties" ],
       "UpstreamPathTemplate": "/catalog/products/{productId}/full",
-      "Aggregator": "ProductDetailsAggregator"
+      "UpstreamHttpMethod": [ "GET" ],
+      "Aggregator": "ProductDetailsAggregator",
+      "SwaggerKey": "catalog",
+      "AuthenticationOptions": {
+        "AuthenticationProviderKeys": [ "KeycloakBearer" ],
+        "AllowedScopes": []
+      }
     }
   ],
 
