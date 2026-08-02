@@ -3,6 +3,7 @@ using System.Text.Json;
 using Asp.Versioning;
 using Ecommerce.CatalogService.Api.Configuration;
 using Ecommerce.CatalogService.Api.Constants;
+using Ecommerce.CatalogService.Api.Extensions;
 using Ecommerce.CatalogService.Api.Helpers;
 using Ecommerce.CatalogService.Application;
 using Ecommerce.CatalogService.Persistence;
@@ -21,6 +22,8 @@ public class Program
     public static void Main(string[] args)
     {
         var builder = WebApplication.CreateBuilder(args);
+
+        Console.Title = "Ecommerce CatalogService";
 
         builder.Services.Configure<JsonSerializerOptions>(options =>
         {
@@ -67,10 +70,7 @@ public class Program
                 };
             });
 
-        builder.Services.AddAuthorizationBuilder()
-            .AddPolicy(AuthConstants.ManagerOnlyPolicy, policy =>
-                policy.RequireRole(AuthConstants.ManagerRole));
-
+        builder.Services.AddCatalogAuthorization();
         builder.Services.AddControllers();
 
         builder.Services.AddApiVersioning(options =>

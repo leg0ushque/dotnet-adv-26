@@ -227,4 +227,111 @@ public class ProductsApiIntegrationTests(CatalogWebApplicationFactory factory) :
         var getResponse = await _client.GetAsync($"/api/v1/products/{productId}");
         getResponse.StatusCode.Should().Be(HttpStatusCode.NotFound);
     }
+
+    [Fact]
+    public async Task GetProductProperties_WithValidId_ReturnsDictionary()
+    {
+        // Arrange - Create a category and product
+        var createCategoryDto = new
+        {
+            Name = "Smartphones",
+            ImageUrl = "https://example.com/smartphones.jpg"
+        };
+
+        var categoryResponse = await _client.PostAsJsonAsync("/api/v1/categories", createCategoryDto);
+        var categoryId = await categoryResponse.Content.ReadFromJsonAsync<string>();
+
+        var createProductDto = new
+        {
+            Name = "Samsung Galaxy S10",
+            Description = "Latest Samsung flagship phone",
+            ImageUrl = "https://example.com/s10.jpg",
+            CategoryId = categoryId,
+            Price = 799.99m,
+            Amount = 50
+        };
+
+        var createResponse = await _client.PostAsJsonAsync("/api/v1/products", createProductDto);
+        var productId = await createResponse.Content.ReadFromJsonAsync<string>();
+
+        // Act
+        var response = await _client.GetAsync($"/api/v1/products/{productId}/properties");
+
+        // Assert
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+        var properties = await response.Content.ReadFromJsonAsync<Dictionary<string, string>>();
+
+        properties.Should().NotBeNull();
+        properties.Should().ContainKey("Id");
+        properties.Should().ContainKey("Name");
+        properties!["Name"].Should().Be("Samsung Galaxy S10");
+        properties.Should().ContainKey("Price");
+        properties["Price"].Should().Be("799.99");
+        properties.Should().ContainKey("Amount");
+        properties["Amount"].Should().Be("50");
+        properties.Should().ContainKey("Description");
+        properties["Description"].Should().Be("Latest Samsung flagship phone");
+        properties.Should().ContainKey("ImageUrl");
+        properties["ImageUrl"].Should().Be("https://example.com/s10.jpg");
+        properties.Should().ContainKey("Category");
+        properties["Category"].Should().Be("Smartphones");
+        properties.Should().ContainKey("CategoryId");
+    }
+
+    [Fact]
+    public async Task GetProductProperties_WithNonExistentId_ReturnsNotFound()
+    {
+        // Arrange
+        var nonExistentId = "non-existent-product-id";
+
+        // Act
+        var response = await _client.GetAsync($"/api/v1/products/{nonExistentId}/properties");
+
+        // Assert
+        response.StatusCode.Should().Be(HttpStatusCode.NotFound);
+    }
+
+    [Fact]
+    public async Task GetProductProperties_WithMinimalProduct_ReturnsRequiredPropertiesOnly()
+    {
+        // Arrange - Create product without optional fields
+        var createCategoryDto = new
+        {
+            Name = "Basic Category",
+            ImageUrl = (string?)null
+        };
+
+        var categoryResponse = await _client.PostAsJsonAsync("/api/v1/categories", createCategoryDto);
+        var categoryId = await categoryResponse.Content.ReadFromJsonAsync<string>();
+
+        var createProductDto = new
+        {
+            Name = "Basic Product",
+            Description = (string?)null,
+            ImageUrl = (string?)null,
+            CategoryId = categoryId,
+            Price = 9.99m,
+            Amount = 5
+        };
+
+        var createResponse = await _client.PostAsJsonAsync("/api/v1/products", createProductDto);
+        var productId = await createResponse.Content.ReadFromJsonAsync<string>();
+
+        // Act
+        var response = await _client.GetAsync($"/api/v1/products/{productId}/properties");
+
+        // Assert
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+        var properties = await response.Content.ReadFromJsonAsync<Dictionary<string, string>>();
+
+        properties.Should().NotBeNull();
+        properties.Should().ContainKey("Id");
+        properties.Should().ContainKey("Name");
+        properties.Should().ContainKey("Price");
+        properties.Should().ContainKey("Amount");
+        properties.Should().ContainKey("Category");
+        properties.Should().NotContainKey("Description");
+        properties.Should().NotContainKey("ImageUrl");
+    }
 }
+

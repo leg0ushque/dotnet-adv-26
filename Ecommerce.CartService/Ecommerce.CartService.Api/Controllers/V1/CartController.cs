@@ -6,14 +6,15 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace Ecommerce.CartService.Api.Controllers.V1;
 
+
+
 /// <summary>
 /// Cart API v1 - manage carts and items.
 /// </summary>
 [ApiController]
-[ApiVersion("1.0")]
-[ApiVersion("2.0")]
+[ApiVersion(Constants.V1)]
+[ApiVersion(Constants.V2)]
 [Route("api/v{version:apiVersion}/cart")]
-[Authorize(Policy = Constants.AuthConstants.StoreCustomerManagerOnlyPolicy)]
 public class CartController(ICartService cartService) : ControllerBase
 {
     private readonly ICartService _cartService = cartService;
@@ -24,9 +25,10 @@ public class CartController(ICartService cartService) : ControllerBase
     /// <param name="cartKey">Cart unique key</param>
     /// <returns>Cart model (v1) or list of items (v2)</returns>
     [HttpGet("{cartKey}")]
-    [MapToApiVersion("1.0")]
-    [ProducesResponseType(typeof(CartDto), 200)]
-    [ProducesResponseType(404)]
+    [MapToApiVersion(Constants.V1)]
+    [ProducesResponseType(typeof(CartDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [Authorize(Policy = Constants.AuthConstants.StoreCustomerManagerOnlyPolicy)]
     public async Task<IActionResult> GetCartV1(string cartKey)
     {
         var result = await _cartService.GetCartByKeyAsync(cartKey);
@@ -44,9 +46,10 @@ public class CartController(ICartService cartService) : ControllerBase
     /// <param name="cartKey">Cart unique key</param>
     /// <returns>List of cart items</returns>
     [HttpGet("{cartKey}")]
-    [MapToApiVersion("2.0")]
-    [ProducesResponseType(typeof(List<CartItemDto>), 200)]
-    [ProducesResponseType(404)]
+    [MapToApiVersion(Constants.V2)]
+    [ProducesResponseType(typeof(List<CartItemDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [Authorize(Policy = Constants.AuthConstants.StoreCustomerManagerOnlyPolicy)]
     public async Task<IActionResult> GetCartV2(string cartKey)
     {
         var result = await _cartService.GetCartByKeyAsync(cartKey);
@@ -64,10 +67,11 @@ public class CartController(ICartService cartService) : ControllerBase
     /// <param name="cartKey">Cart unique key</param>
     /// <param name="item">Cart item model</param>
     [HttpPost("{cartKey}/item")]
-    [MapToApiVersion("1.0")]
-    [MapToApiVersion("2.0")]
-    [ProducesResponseType(200)]
-    [ProducesResponseType(400)]
+    [MapToApiVersion(Constants.V1)]
+    [MapToApiVersion(Constants.V2)]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [Authorize(Policy = Constants.AuthConstants.StoreCustomerManagerOnlyPolicy)]
     public async Task<IActionResult> AddItemToCart(string cartKey, [FromBody] CartItemDto item)
     {
         var result = await _cartService.AddItemToCartAsync(cartKey, item);
@@ -86,10 +90,11 @@ public class CartController(ICartService cartService) : ControllerBase
     /// <param name="cartKey">Cart unique key</param>
     /// <param name="itemId">Item id (ProductId)</param>
     [HttpDelete("{cartKey}/items/{itemId}")]
-    [MapToApiVersion("1.0")]
-    [MapToApiVersion("2.0")]
-    [ProducesResponseType(200)]
-    [ProducesResponseType(404)]
+    [MapToApiVersion(Constants.V1)]
+    [MapToApiVersion(Constants.V2)]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [Authorize(Policy = Constants.AuthConstants.StoreCustomerManagerOnlyPolicy)]
     public async Task<IActionResult> DeleteItemFromCart(string cartKey, string itemId)
     {
         var result = await _cartService.DeleteItemFromCartAsync(cartKey, itemId);

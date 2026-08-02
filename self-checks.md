@@ -1,3 +1,74 @@
+# 10. API Gateways
+
+### 1. What does an API gateway do? What is the implementation of the API gateways?
+
+API Gateway is a kind of a single entry point for external clients into a set of microservices/backend APIs. Its responsibilities include routing & balancing (map requests to internal services, aggregate responses, distribute load if necessary), cross-cutting concerns (auth, rate limiting, logging, & tracing, caching) and protocol and payload adaptation (transform HTTP paths, headers & bodies between protocols, e.g. HTTP to gRPC) and share responses for clients.  
+
+The implementation is through using either cloud-native managed services (like AWS API Gateway, Azure API Management, GCP API - with declarative configuration and infra, scaling and high availability is handled by the provider) or self-hosted (e.g. Ocelot in .NET, Spring Cloud Gateway in Java - configurated via JSON/YAML, may be integrated directly into CI/CD).
+
+Conceptually they all do the same thing, but implementation details may differ:
+* request pipeline: middleware chain that applies auth, rate limiting, transformations and forwards the request downstream    
+- configuration: route definitions (upstream to downstream), policies (rate limits, auth), aggregation rules, and timeouts
+
+As for Ocelot in .NET, it is a configurable standard ASP.NET Core app with JSON config describing upstreams, downstreams and other implementation details. May have custom aggregators to collect responses and map into a single response model.
+
+### 2. Compare cloud-based gateways with the self-hosted ones, when choose either of them?
+
+Cloud gateways are fully managed, multi‑tenant or dedicated services in the provider’s ecosystem. Their typical characteristics:  
+* ➕ Managed scaling and high avail.: autoscaling, global regions, built‑in redundancy  
+* ➕ Tight ecosystem integration: native auth (e.g. Azure AD), keys, logging/monitoring, billing, and developer portals  
+* ➕ Reduced ops burden: no VM/container maintenance, patches, or availability management  
+* ➖ Latency and egress boundaries: requests must traverse provider edge; if the services are on‑prem or in another cloud, it may add noticeable latency  
+* ➖ Cost model: per‑call/per‑bandwidth pricing can be expensive at high volume; tied to provider billing and quotas
+* ➖ Less “hackable”: custom middleware or niche protocols may be harder or impossible compared to owning the code  
+
+Self‑hosted gateways are deployed as own services (VMs, K8s, containers) and can be run on‑prem or in any cloud. Their characteristics:
+- ➕ Full control: the developer owns the deployment topology, middleware stack, customization, and can extend gateway behavior heavily  
+- ➕ Flexible networking: can sit close to backend services (same cluster/VNet), reduce hops, or bridge complex on‑prem setups  
+- ➕ Potentially lower cost at scale: more traffic can be packed onto the infra and avoid per‑request pricing, at the cost of operational complexity  
+- ➖ Operational overhead: HA, scaling, observability, backups, and security hardening must be implemented  
+- ➖ Reliability risk: gateway is a central bottleneck and single point of failure if mis‑designed    
+
+Cloud gateways may be chosen when the project is already in the cloud, fast time‑to‑market needed and ops/availability work should be skipped, especially for public APIs.  
+Self‑hosted - is for the cases with custom behavior needed (custom middleware),  and DevOps capacity is enough to support it.
+
+### 3. What is Backend for Frontend (BFF) pattern? What are the pros and cons of it?
+
+BFF is essentially “API gateway per client type.” Instead of a single generic gateway for all consumers, each frontend (e.g. web SPA, mobile app, admin UI, IoT) gets its own backend tuned to its needs.
+
+Each BFF is a small backend service that speaks the language and needs of one client, aggregates data from multiple microservices, and shapes the payloads exactly as that client expects.
+Upstream API gateway may be still presented for cross‑cutting concerns, but BFFs sit closer to the UI and handle client‑specific orchestration and logic.
+
+BFF is a kind of facade per UI - whereas a classic gateway is a shared facade for all clients. Adopt BFF when frontend teams are independent and fast‑moving, with divergent needs (web vs mobile vs partner portals), and there is a necessity in decoupling their evolution from core microservices.
+
+* ➕ Tailored contracts: each client gets optimized endpoints (no over/under‑fetching), properly paginated and shaped for its UX  
+* ➕ Reduced UI complexity: frontend code no longer knows about many microservices; it calls the BFF which orchestrates and aggregates data  
+* ➕ Faster UI evolution: so the developer can change client‑specific APIs, add view‑specific logic, and iterate independent of the core domain services  
+* ➖ More services to operate: every client type means another backend (or at least another codebase), increasing maintenance and deployment overhead  
+* ➖ Potential duplication: similar logic may appear in multiple BFFs (e.g., common user operations), requiring shared libraries or refactoring  
+* ➖ Complexity in layering: now there are core APIs, BFFs, and possibly an outward gateway; tracing, versioning, and debugging can be more involved  
+
+### 4. How can you degrade or improve API Gateway performance?
+
+The advantage of the gateway being a central piece makes is the main disadvantage at the same time - performance and resilience are critical. 
+
+Performance may be commonly degraded in cases:
+* overloaded cross‑cutting logic: heavy synchronous auth, complex transformations, blocking I/O, or chatty aggregation calls per request  
+* poor timeouts and retries: long timeouts or aggressive retries amplify latency and can cause cascading failures under load  
+* inefficient routing topology: gateway placed far from services (network hops, cross‑region calls), or forced fan‑out to too many services  
+
+The ways to improve gateway performance are
+* keeping the gateway “thin” with focusing on cross‑cutting concerns and light transformations; pushing heavy business logic into downstream services or BFFs
+* using proper caching and rate limiting: cache idempotent responses where possible, apply throttling to protect downstream services under spikes
+* optimization of network and deployment: co‑locate gateway near downstream services (same region/VNet/cluster), scale horizontally, and use load balancing appropriately  
+* tuning timeouts, retries, and circuit breakers with setting reasonable timeouts, applying backoff strategies, and using bulkheads/circuit breakers to isolate failing services
+
+From an Ocelot/.NET perspective, using synchronous or blocking code in delegating handlers/middleware, performing large JSON manipulations on every request, or not tuning connection pools will hurt throughput. Improvements may be implemented by
+* reviewing and minimizing custom middleware and delegating handlers in the gateway pipeline  
+* enabling output caching for suitable endpoints and using sensible QoS settings (timeouts, retries, circuit breaker configs)  
+* scaling gateway instances horizontally and measuring with proper logging and metrics, adjusting resource limits and connection settings.
+
+---
 # 09. Containerization
 
 ### 1. What is orchestration?

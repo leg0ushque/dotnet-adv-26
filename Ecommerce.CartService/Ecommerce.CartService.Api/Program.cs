@@ -3,6 +3,7 @@ using System.Text.Json;
 using Asp.Versioning;
 using Asp.Versioning.ApiExplorer;
 using AutoMapper;
+using Ecommerce.CartService.Api.Extensions;
 using Ecommerce.CartService.Api.Helpers;
 using Ecommerce.CartService.Api.Middleware;
 using Ecommerce.CartService.Api.Options;
@@ -22,6 +23,8 @@ public class Program
     public static void Main(string[] args)
     {
         var builder = WebApplication.CreateBuilder(args);
+
+        Console.Title = "Ecommerce CartService";
 
         builder.Services.Configure<JsonSerializerOptions>(options =>
         {
@@ -72,9 +75,7 @@ public class Program
                 };
             });
 
-        builder.Services.AddAuthorizationBuilder()
-            .AddPolicy(AuthConstants.StoreCustomerManagerOnlyPolicy, policy =>
-                policy.RequireRole(AuthConstants.ManagerRole, AuthConstants.StoreCustomerRole));
+        builder.Services.AddCartAuthorization();
 
         builder.Services.AddAuthorization();
 

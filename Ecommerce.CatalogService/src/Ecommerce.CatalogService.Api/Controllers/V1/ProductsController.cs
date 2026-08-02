@@ -59,6 +59,7 @@ public class ProductsController(IProductService productService) : ControllerBase
             Links =
             [
                 new Link { Href = Url.Action(nameof(GetProduct), new { id })!, Rel = "self", Method = HttpMethod.Get.Method },
+                new Link { Href = Url.Action(nameof(GetProductProperties), new { id })!, Rel = "properties", Method = HttpMethod.Get.Method },
                 new Link { Href = Url.Action(nameof(UpdateProduct), new { id })!, Rel = "update", Method = HttpMethod.Put.Method },
                 new Link { Href = Url.Action(nameof(DeleteProduct), new { id })!, Rel = "delete", Method = HttpMethod.Delete.Method },
                 new Link { Href = Url.Action(nameof(GetProducts))!, Rel = "all-products", Method = HttpMethod.Get.Method },
@@ -75,7 +76,7 @@ public class ProductsController(IProductService productService) : ControllerBase
     /// <param name="createDto">Product creation data</param>
     /// <returns>Created product ID</returns>
     [HttpPost]
-    [Authorize(Policy = AuthConstants.ManagerOnlyPolicy)]
+    [Authorize(Policy = AuthConstants.MutatingAdminManagerPolicy)]
     [ProducesResponseType(typeof(string), StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
@@ -93,7 +94,7 @@ public class ProductsController(IProductService productService) : ControllerBase
     }
 
     [HttpPut("{id}")]
-    [Authorize(Policy = AuthConstants.ManagerOnlyPolicy)]
+    [Authorize(Policy = AuthConstants.MutatingAdminManagerPolicy)]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -117,7 +118,7 @@ public class ProductsController(IProductService productService) : ControllerBase
     }
 
     [HttpDelete("{id}")]
-    [Authorize(Policy = AuthConstants.ManagerOnlyPolicy)]
+    [Authorize(Policy = AuthConstants.MutatingAdminManagerPolicy)]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
@@ -132,5 +133,25 @@ public class ProductsController(IProductService productService) : ControllerBase
         }
 
         return NoContent();
+    }
+
+    /// <summary>
+    /// Gets product properties as key-value pairs
+    /// </summary>
+    /// <param name="id">Product ID</param>
+    /// <returns>Dictionary of product properties (e.g., Category = Samsung, Model = S10)</returns>
+    [HttpGet("{id}/properties")]
+    [ProducesResponseType(typeof(Dictionary<string, string>), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<Dictionary<string, string>>> GetProductProperties(string id)
+    {
+        var result = await _productService.GetProductPropertiesAsync(id);
+
+        if (result.IsFailure)
+        {
+            return NotFound(new { error = result.Error!.Message });
+        }
+
+        return Ok(result.Value);
     }
 }
